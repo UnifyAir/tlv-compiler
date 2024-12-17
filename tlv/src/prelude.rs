@@ -3,6 +3,7 @@ use thiserror::Error;
 use tlv_derive::TlvEncode;
 pub use std::io::Write;
 use attribute_derive::{AttributeIdent, FromAttr};
+use bytes::{BufMut, BytesMut};
 pub use bytes::Bytes;
 
 // #[derive(Error, Debug)]
@@ -92,7 +93,7 @@ pub trait TlvEncode {
 pub trait TlvEncodeInner {
 	fn encode_inner(
 		&self,
-		buffer: &mut Bytes,
+		buffer: &mut BytesMut,
 	) -> Result<usize>;
 }
 
@@ -104,8 +105,36 @@ pub trait TlvDecodeInner: Sized {
 	fn decode_inner(data: &[u8]) -> Result<Self>;
 }
 
+impl TlvEncodeInner for u8{
+	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize> {
+		bytes.put(&self.to_be_bytes()[..]);
+		Ok(1usize)
+	}
+}
+
+impl<T> TlvEncodeInner for Option<T>
+where T: TlvEncodeInner {
+	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize> {
+		match &self {
+			Some(inner) => inner.encode_inner(bytes),
+			None => Ok(0usize)
+		}
+	}
+}
+
+impl<T> TlvEncodeInner for Vec<T>
+where T: TlvEncodeInner {
+	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize> {
+		let mut total_encoded = 0usize;
+		for item in self {
+			total_encoded += item.encode_inner(bytes)?;
+		}
+		Ok(total_encoded)
+	}
+}
+
 // #[derive(TlvEncode)]
-// #[tlv_config(tag=132, type=tlv, t=8, l=8)]
+// #[tlv_config(tag=132, type=tluuv, t=8, l=8)]
 // pub struct MyIE{
 // 	#[tlv_config(length_type=2_byte, length=7, tag_lenth=2_byte, tag=123, value_type=4_bit)]
 //     pub b: MyIE3,

@@ -99,7 +99,7 @@ fn impl_tlv_encode(tlv_config: TlvConfig, struct_name: Ident) -> Result<TokenStr
 				#length_stream
 				#encoded_inner_stream
 				#fix_length_stream
-				Ok(bytes)
+				Ok(bytes.freeze())
 			}
 		}
 	})
@@ -113,6 +113,8 @@ fn impl_tlv_encode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 	let initialize_stream = quote! {
 		let mut total_length:usize = 0;
 	};
+
+	//Todo apply a check for required, array, option
 	for field in data_struct.fields {
 		let field_name = field.ident.unwrap();
 		let tlv_config= TlvConfig::from_attributes(field.attrs)?;
@@ -121,20 +123,22 @@ fn impl_tlv_encode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 		let length_stream = length_encode(&tlv_config);
 		let header_size_bytes = tlv_config.tag_bytes_format + tlv_config.length_bytes_format;
 		let fix_length_stream = fix_length_encode(&tlv_config);
+
 		output_stream.push(quote! {
 			#tag_stream
 			#fix_length_parameter_stream
 			#length_stream
 			total_length += #header_size_bytes as usize;
-			total_length += &self.#field_name.encode_inner(bytes);
+			total_length += &self.#field_name.encode_inner(bytes)?;
 			#fix_length_stream
 		});
+
 	}
 
 	Ok(
 		quote! {
 			impl TlvEncodeInner for #struct_name {
-				fn encode_inner(&self, buffer: &mut Bytes) -> Result<usize> {
+				fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize> {
 					#initialize_stream
 					#(#output_stream)*
 					total_length

@@ -1,0 +1,163 @@
+
+use thiserror::Error;
+use tlv_derive::TlvEncode;
+pub use std::io::Write;
+use attribute_derive::{AttributeIdent, FromAttr};
+pub use bytes::Bytes;
+
+// #[derive(Error, Debug)]
+// pub enum EnDecError<'a> {
+// 	#[error("Io Error: {0}")]
+// 	IoError(
+// 		#[from]
+// 		std::io::Error,
+// 	),
+//
+// 	#[error("Encode error for {0}: {1}")]
+// 	EncodeError(u16, String),
+//
+// 	#[error("Decode error for {0}: {1}")]
+// 	DecodeError(u16, String),
+//
+// 	#[error("New Object Creation Error for {0}: {1}")]
+// 	NewError(u16, String),
+//
+// 	#[error("Decode error for grouped tlv")]
+// 	GroupedTlvMultipleFields(Vec<String>),
+//
+// 	#[error("Required field not specified: {1}")]
+// 	RequiredFieldAbsent(Vec<String>, String),
+//
+// 	#[error("Required field not specified")]
+// 	UnknownTlvPresent(Vec<String>, u16, &'a [u8]),
+//
+// 	#[error("Expected Boundary exceeded data: boundary - {1}")]
+// 	IndexOutOfRange(Vec<String>, usize, &'a [u8]),
+// }
+//
+// impl EnDecError<'_> {
+// 	pub fn push_current_function_name(
+// 		&mut self,
+// 		name: String,
+// 	) {
+// 		match self {
+// 			EnDecError::GroupedTlvMultipleFields(inner, ..)
+// 			| EnDecError::RequiredFieldAbsent(inner, ..)
+// 			| EnDecError::UnknownTlvPresent(inner, ..) => {
+// 				inner.push(name);
+// 			}
+// 			_ => (),
+// 		};
+// 	}
+// }
+
+// pub(crate) fn tlv_encode_field<T, W>(
+// 	field: &T,
+// 	writer: &mut W,
+// ) -> Result<(), EnDecError<'static>>
+// where
+// 	T: TlvEncode + TlvLength + TlvTag,
+// 	W: io::Write,
+// {
+// 	let tag = <T as TlvTag>::tag_type();
+// 	let length = TlvLength::length(field);
+// 	writer.write_all(tag.to_be_bytes().as_ref())?;
+// 	writer.write_all(length.to_be_bytes().as_ref())?;
+// 	TlvEncode::encode(field, writer)?;
+// 	Ok(())
+// }
+
+pub type Result<'a, T> = std::result::Result<T, ()>;
+
+pub trait TlvTag {
+	const TLV_TAG: u16;
+	fn tag_type() -> u16 {
+		Self::TLV_TAG
+	}
+	fn tag_type_self(&self) -> u16 {
+		Self::tag_type()
+	}
+}
+
+pub trait TlvLength {
+	fn length(&self) -> u16;
+}
+
+pub trait TlvEncode {
+	fn encode(
+		&self
+	) -> Result<Bytes>;
+}
+
+pub trait TlvEncodeInner {
+	fn encode_inner(
+		&self,
+		buffer: &mut Bytes,
+	) -> Result<usize>;
+}
+
+pub trait TlvDecode: Sized {
+	fn decode(data: &[u8]) -> Result<Self>;
+}
+
+pub trait TlvDecodeInner: Sized {
+	fn decode_inner(data: &[u8]) -> Result<Self>;
+}
+
+// #[derive(TlvEncode)]
+// #[tlv_config(tag=132, type=tlv, t=8, l=8)]
+// pub struct MyIE{
+// 	#[tlv_config(length_type=2_byte, length=7, tag_lenth=2_byte, tag=123, value_type=4_bit)]
+//     pub b: MyIE3,
+// 	#[tlv_config(length_type=2_byte, length=7, tag_type=2_byte, tag=123)]
+//     pub c: Vec<u8>,
+// 	#[tlv_config(length_type=2_byte, length=7, tag_type=2_byte, tag=123)]
+//     pub a: Option<MyIE2>,
+// }
+
+
+
+// #[derive(FromAttr, Debug)]
+// #[attribute(ident = ident, aliases = [a, b])]
+// #[attribute(error(
+//     unknown_field = "expected one of {expected_fields:i(`{}`)(, )}",
+//     duplicate_field = "duplicate `{field}`",
+//     missing_field = "missing field `{field}`",
+//     field_help = "try {attribute}: {field}={example}",
+//     conflict = "{first} !!! {second}"
+// ))]
+// struct Custom {
+//     optional_implicit: Option<Block>,
+//     #[attribute(optional)]
+//     optional_explicit: u8,
+//     #[attribute(optional, default = 2 * 5)]
+//     optional_default: u8,
+//     #[attribute(default = 33)]
+//     default: u8,
+//     #[attribute(conflicts = [conflict_b])]
+//     conflict_a: Option<String>,
+//     conflict_b: Option<String>,
+//     #[attribute(example = "2.5")]
+//     example: f32,
+//     flag: bool,
+// }
+// pub struct MyIE2{
+//     pub a: u8,
+//     pub b: u16,
+//     pub c: Vec<u8>,
+// }
+
+// #[tlv_type(t=8, l=8)]
+// pub struct MyIE3{
+//     #[value_type(v=v8)]
+//     pub a: [u8],
+// }
+// #[tag_type = u8]
+// pub struct myu8(u8);
+
+
+// #[derive(Custom)]
+// pub struct Tester{
+// 	#[loda(default=123)]
+// 	pub a: u8,
+// }

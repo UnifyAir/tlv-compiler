@@ -1,0 +1,10 @@
+[package]
+name = "tlv"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+thiserror.workspace = true
+tlv-derive = { path = "../tlv-derive" }
+attribute-derive = { version = "0.10.3", features = ["syn-full"] }
+bytes = "1.9.0"

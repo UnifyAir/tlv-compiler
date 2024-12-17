@@ -7,16 +7,18 @@ fn main() {
 #[tlv_config(tag=123, length_bytes_format=4, estimated_size=2048)]
 pub struct Tester{
     #[tlv_config(tag=123, length_bytes_format=4)]
-    lester: u8,
+    lester: Lester,
+    #[tlv_config(tag=123, length_bytes_format=4)]
+    sohan: u8
 
 }
-//
-// #[derive(TlvEncode)]
-// #[tlv_config(tag=123, length=3, length_bytes_format=4, estimated_size=2048)]
-// pub struct Lester{
-//     #[tlv_config(tag=123, length=3, length_bytes_format=4)]
-//     mohan: u8,
-//
-// }
-//
+
+#[derive(TlvEncode)]
+#[tlv_config(tag=123, length=3, length_bytes_format=4, estimated_size=2048)]
+pub struct Lester{
+    #[tlv_config(tag=123, length=3, length_bytes_format=4)]
+    mohan: Option<u8>,
+
+}
+
 

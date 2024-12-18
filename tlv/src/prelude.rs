@@ -1,12 +1,9 @@
 
-use thiserror::Error;
-use tlv_derive::TlvEncode;
 pub use std::io::Write;
-use attribute_derive::{AttributeIdent, FromAttr};
-use bytes::{BufMut, BytesMut};
-pub use bytes::Bytes;
+use bytes::{BufMut, BytesMut, Bytes};
+use thiserror::Error;
 
-// #[derive(Error, Debug)]
+// // #[derive(Error, Debug)]
 // pub enum EnDecError<'a> {
 // 	#[error("Io Error: {0}")]
 // 	IoError(
@@ -35,7 +32,7 @@ pub use bytes::Bytes;
 // 	#[error("Expected Boundary exceeded data: boundary - {1}")]
 // 	IndexOutOfRange(Vec<String>, usize, &'a [u8]),
 // }
-//
+
 // impl EnDecError<'_> {
 // 	pub fn push_current_function_name(
 // 		&mut self,
@@ -68,53 +65,44 @@ pub use bytes::Bytes;
 // 	Ok(())
 // }
 
-pub type Result<'a, T> = std::result::Result<T, ()>;
 
-pub trait TlvTag {
-	const TLV_TAG: u16;
-	fn tag_type() -> u16 {
-		Self::TLV_TAG
-	}
-	fn tag_type_self(&self) -> u16 {
-		Self::tag_type()
-	}
-}
-
-pub trait TlvLength {
-	fn length(&self) -> u16;
+#[derive(Error, Debug)]
+pub enum TlvError {
+	#[error("unknown error")]
+	Unknown,
 }
 
 pub trait TlvEncode {
 	fn encode(
 		&self
-	) -> Result<Bytes>;
+	) -> Result<Bytes, TlvError>;
 }
 
 pub trait TlvEncodeInner {
 	fn encode_inner(
 		&self,
 		buffer: &mut BytesMut,
-	) -> Result<usize>;
+	) -> Result<usize, TlvError>;
 }
 
 pub trait TlvDecode: Sized {
-	fn decode(data: &[u8]) -> Result<Self>;
+	fn decode(data: &[u8]) -> Result<Self, TlvError>;
 }
 
 pub trait TlvDecodeInner: Sized {
-	fn decode_inner(data: &[u8]) -> Result<Self>;
+	fn decode_inner(data: &[u8]) -> Result<Self, TlvError>;
 }
 
 impl TlvEncodeInner for u8{
-	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize> {
-		bytes.put(&self.to_be_bytes()[..]);
+	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+		bytes.put_u8(self.to_be());
 		Ok(1usize)
 	}
 }
 
 impl<T> TlvEncodeInner for Option<T>
 where T: TlvEncodeInner {
-	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize> {
+	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
 		match &self {
 			Some(inner) => inner.encode_inner(bytes),
 			None => Ok(0usize)
@@ -124,7 +112,7 @@ where T: TlvEncodeInner {
 
 impl<T> TlvEncodeInner for Vec<T>
 where T: TlvEncodeInner {
-	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize> {
+	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
 		let mut total_encoded = 0usize;
 		for item in self {
 			total_encoded += item.encode_inner(bytes)?;

@@ -48,3 +48,27 @@ pub(crate) fn get_bytes_format(tag_bytes_format: u8) -> Ident {
         }
     }
 }
+
+
+pub(crate) fn get_put_bytes(tag_bytes_format: u8) -> Ident {
+    match tag_bytes_format {
+        1 => {
+            Ident::new("put_u8", Span::call_site().into())
+        }
+        2 => {
+            Ident::new("put_u16", Span::call_site().into())
+        }
+        4 => {
+            Ident::new("put_u32", Span::call_site().into())
+        }
+        8 => {
+            Ident::new("put_u64", Span::call_site().into())
+        }
+        16 => {
+            Ident::new("put_u128", Span::call_site().into())
+        }
+        _ => {
+            panic!("Invalid tag_bytes_format")
+        }
+    }
+}

@@ -8,3 +8,4 @@ thiserror.workspace = true
 tlv-derive = { path = "../tlv-derive" }
 attribute-derive = { version = "0.10.3", features = ["syn-full"] }
 bytes = "1.9.0"
+anyhow = "1.0.94"

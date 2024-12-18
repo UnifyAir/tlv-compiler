@@ -4,9 +4,12 @@ use attribute_derive::Attribute;
 use quote::quote;
 use syn::{DataStruct, Error };
 use syn::{ DeriveInput };
-use crate::tlv_config::{TlvConfig, get_bytes_format, get_put_bytes} ;
+use syn::token::Token;
+use crate::tlv_config::{TlvConfig, get_bytes_format, get_put_bytes, ValueFormat};
 
 use crate::tlv_field:: { get_struct_name };
+use crate::utils::is_u4_type;
+
 // todo add support for LV and TV type, if added re-verify
 fn tag_encode(tlv_config: &TlvConfig) -> TokenStream{
 	match tlv_config.tag {
@@ -72,6 +75,33 @@ fn fix_length_encode(tlv_config: &TlvConfig) -> TokenStream {
 	}
 }
 
+fn fix_value_parameter(tlv_config: &TlvConfig) -> TokenStream{
+	match tlv_config.value_bits_format{
+		ValueFormat::OneByte => quote! {}
+		_ => {
+			quote! {
+				let mut result: Result<usize, tlv::prelude::TlvError>  = Err(TlvError::InCompleteByteInsertion);
+			}
+		}
+	}
+}
+
+fn fix_value_encode(tlv_config: &TlvConfig) -> TokenStream{
+	match tlv_config.value_bits_format{
+		ValueFormat::OneByte => quote! {},
+		ValueFormat::FirstHalf => {
+			quote! {
+				result
+			}
+		}
+		ValueFormat::SecondHalf => {
+			quote! {
+				result = Ok()
+			}
+		}
+	}
+}
+
 
 fn impl_tlv_encode(tlv_config: TlvConfig, struct_name: Ident) -> Result<TokenStream, Error> {
 
@@ -117,7 +147,9 @@ fn impl_tlv_encode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 		let mut total_length:usize = 0;
 	};
 
-	//Todo apply a check for required, array, option
+	//Todo apply a check for inorder required, array, option
+	//Todo apply a check for inorder first half and second half
+
 	for field in data_struct.fields {
 		let field_name = field.ident.unwrap();
 		let tlv_config= TlvConfig::from_attributes(field.attrs)?;
@@ -127,6 +159,7 @@ fn impl_tlv_encode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 		let length_stream = length_encode(&tlv_config);
 		let header_size_bytes = tlv_config.tag_bytes_format + tlv_config.length_bytes_format;
 		let fix_length_stream = fix_length_encode(&tlv_config);
+
 
 		output_stream.push(quote! {
 			#tag_stream

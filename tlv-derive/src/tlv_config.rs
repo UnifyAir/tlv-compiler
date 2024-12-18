@@ -22,10 +22,15 @@ pub struct TlvConfig{
     #[attribute(optional, default = 1)]
 	pub(crate) length_bytes_format: u8,
 	pub(crate) value: Option<usize>,
-    #[attribute(optional, default = 8)]
-	pub(crate) value_bits_format: u8,
+    #[attribute(optional, default = ValueFormat::OneByte)]
+	pub(crate) value_bits_format: ValueFormat,
 }
-
+#[derive(Debug)]
+pub enum ValueFormat {
+    OneByte,
+    FirstHalf,
+    SecondHalf
+}
 pub(crate) fn get_bytes_format(tag_bytes_format: u8) -> Ident {
     match tag_bytes_format {
         1 => {

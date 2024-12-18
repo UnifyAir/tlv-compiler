@@ -8,6 +8,7 @@ mod tlv_field;
 mod tlv_length_derive;
 mod tlv_tag_derive;
 mod tlv_config;
+mod utils;
 
 use proc_macro::TokenStream;
 use syn::Error;

@@ -2,14 +2,85 @@ use std::collections::VecDeque;
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-use syn::Error;
-
+use syn::{DeriveInput, Error};
+use crate::tlv_config::{get_bytes_format, TlvConfig};
 use crate::tlv_field::{
 	field_type_extractor_from_tag,
 	get_struct_name,
 	get_struct_tag,
 	TlvFieldType,
 };
+
+
+fn impl_tlv_decode(tlv_config: TlvConfig, struct_name: Ident) -> Result<TokenStream, Error> {
+
+	let estimated_size = tlv_config.estimated_size;
+	let initialize_stream = quote! {
+		let mut bytes = BytesMut::with_capacity(#estimated_size);
+	};
+	let length_bytes_format = get_bytes_format(tlv_config.length_bytes_format);
+
+	let tag_stream = crate::tlv_encode_derive::tag_encode(&tlv_config);
+
+	let fix_length_parameter_stream = crate::tlv_encode_derive::fix_length_parameter(&tlv_config);
+
+	let length_stream = crate::tlv_encode_derive::length_encode(&tlv_config);
+
+	let encoded_inner_stream = quote! {
+		let actual_length = self.encode_inner(&mut bytes)? as #length_bytes_format;
+	};
+
+	let fix_length_stream = crate::tlv_encode_derive::fix_length_encode(&tlv_config);
+
+	Ok(quote! {
+		impl TlvEncode for #struct_name {
+			fn encode(&self) -> Result<Bytes, tlv::prelude::TlvError> {
+				#initialize_stream
+				#tag_stream
+				#fix_length_parameter_stream
+				#length_stream
+				#encoded_inner_stream
+				#fix_length_stream
+				Ok(bytes.freeze())
+			}
+		}
+	})
+}
+pub(crate) fn tlv_encode(token_stream: TokenStream) -> Result<TokenStream, Error> {
+
+	let DeriveInput { attrs, data, .. } = syn::parse2(token_stream.clone())?;
+	let tlv_config: Option<TlvConfig> = TlvConfig::from_attributes(attrs).ok();
+	let struct_name = get_struct_name(token_stream.clone())?;
+	let mut output_stream = Vec::<TokenStream>::new();
+	match tlv_config {
+		Some(tlv_config) => {
+			match data {
+				syn::Data::Struct(data_struct) => {
+					output_stream.push(crate::tlv_encode_derive::impl_tlv_decode(tlv_config, struct_name.clone())?);
+					// output_stream.push(crate::tlv_encode_derive::impl_tlv_decode_inner(struct_name, data_struct)?);
+				}
+				_ => {
+					panic!()
+				},
+			}
+		}
+		None => {
+			match data {
+				syn::Data::Struct(data_struct) => {
+					// output_stream.push(crate::tlv_encode_derive::impl_tlv_decode_inner(struct_name, data_struct)?);
+					todo!()
+				}
+				_ => {
+					panic!()
+				},
+			}
+		}
+	};
+
+	Ok(quote!{
+		#(#output_stream)*
+	})
+}
 
 pub(crate) fn tlv_decode(struct_stream: TokenStream) -> Result<TokenStream, Error> {
 	let fields = field_type_extractor_from_tag(struct_stream.clone())?;

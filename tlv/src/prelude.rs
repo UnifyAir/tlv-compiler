@@ -2,7 +2,7 @@
 pub use std::io::Write;
 use bytes::{BufMut, BytesMut, Bytes};
 use thiserror::Error;
-
+use crate::prelude::TlvError::InCompleteByteInsertion;
 // // #[derive(Error, Debug)]
 // pub enum EnDecError<'a> {
 // 	#[error("Io Error: {0}")]
@@ -70,6 +70,8 @@ use thiserror::Error;
 pub enum TlvError {
 	#[error("unknown error")]
 	Unknown,
+	#[error("Incomplete byte exist probabily because last insertion was u4 without any spare or remaining u4")]
+	InCompleteByteInsertion
 }
 
 pub trait TlvEncode {
@@ -81,16 +83,17 @@ pub trait TlvEncode {
 pub trait TlvEncodeInner {
 	fn encode_inner(
 		&self,
-		buffer: &mut BytesMut,
+		bytes: &mut BytesMut,
 	) -> Result<usize, TlvError>;
 }
 
 pub trait TlvDecode: Sized {
-	fn decode(data: &[u8]) -> Result<Self, TlvError>;
+	fn decode(data: &Bytes) -> Result<Self, TlvError>;
 }
 
+
 pub trait TlvDecodeInner: Sized {
-	fn decode_inner(data: &[u8]) -> Result<Self, TlvError>;
+	fn decode_inner(data: &Bytes) -> Result<Self, TlvError>;
 }
 
 impl TlvEncodeInner for u8{
@@ -121,6 +124,25 @@ where T: TlvEncodeInner {
 	}
 }
 
+pub enum u4{
+	FirstHalf(u8),
+	SecondHalf(u8)
+}
+impl TlvEncodeInner for u4{
+	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+		match &self {
+			u4::FirstHalf(ref byte) => {
+				bytes.put_u8(byte << 4);
+				Err(InCompleteByteInsertion)
+			}
+			u4::SecondHalf(ref byte) => {
+				let index = bytes.len();
+				bytes[index-1..index].copy_from_slice((&byte>>4).to_be_bytes());
+				Ok(1usize)
+			}
+		}
+	}
+}
 // #[derive(TlvEncode)]
 // #[tlv_config(tag=132, type=tluuv, t=8, l=8)]
 // pub struct MyIE{

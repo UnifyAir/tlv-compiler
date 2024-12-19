@@ -1,6 +1,6 @@
 
 pub use std::io::Write;
-use bytes::{BufMut, BytesMut, Bytes};
+use bytes::{Buf, BufMut, BytesMut, Bytes};
 use thiserror::Error;
 use crate::prelude::TlvError::InCompleteByteInsertion;
 // // #[derive(Error, Debug)]
@@ -88,12 +88,12 @@ pub trait TlvEncodeInner {
 }
 
 pub trait TlvDecode: Sized {
-	fn decode(data: &Bytes) -> Result<Self, TlvError>;
+	fn decode(bytes: Bytes) -> Result<Self, TlvError>;
 }
 
 
 pub trait TlvDecodeInner: Sized {
-	fn decode_inner(data: &Bytes) -> Result<Self, TlvError>;
+	fn decode_inner(bytes: &[u8], length: usize) -> Result<Self, TlvError>;
 }
 
 impl TlvEncodeInner for u8{
@@ -124,25 +124,56 @@ where T: TlvEncodeInner {
 	}
 }
 
-pub enum u4{
-	FirstHalf(u8),
-	SecondHalf(u8)
-}
-impl TlvEncodeInner for u4{
-	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
-		match &self {
-			u4::FirstHalf(ref byte) => {
-				bytes.put_u8(byte << 4);
-				Err(InCompleteByteInsertion)
-			}
-			u4::SecondHalf(ref byte) => {
-				let index = bytes.len();
-				bytes[index-1..index].copy_from_slice((&byte>>4).to_be_bytes());
-				Ok(1usize)
-			}
-		}
+
+impl TlvDecodeInner for u8{
+	fn decode_inner(bytes: &[u8], length: usize) -> Result<Self, TlvError> {
+		Ok(bytes[0].clone())
 	}
 }
+
+impl<T> TlvDecodeInner for Option<T>
+where T: TlvDecodeInner {
+	fn decode_inner(bytes: &[u8], length: usize) -> Result<Self, TlvError> {
+		if length > 0 {
+			return Ok(Some(T::decode_inner(bytes, length)?));
+		}
+		Ok(None)
+	}
+}
+
+
+
+// pub enum u4{
+// 	FirstHalf(u8),
+// 	SecondHalf(u8)
+// }
+// impl TlvEncodeInner for u4{
+// 	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+// 		match &self {
+// 			u4::FirstHalf(ref byte) => {
+// 				bytes.put_u8(byte << 4);
+// 				Err(InCompleteByteInsertion)
+// 			}
+// 			u4::SecondHalf(ref byte) => {
+// 				let index = bytes.len();
+// 				bytes[index-1..index].copy_from_slice((&byte>>4).to_be_bytes());
+// 				Ok(1usize)
+// 			}
+// 		}
+// 	}
+// }
+
+
+
+
+
+
+
+
+
+
+// ====================================================================================
+
 // #[derive(TlvEncode)]
 // #[tlv_config(tag=132, type=tluuv, t=8, l=8)]
 // pub struct MyIE{

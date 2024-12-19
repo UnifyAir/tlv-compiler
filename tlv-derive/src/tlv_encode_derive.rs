@@ -4,21 +4,20 @@ use attribute_derive::Attribute;
 use quote::quote;
 use syn::{DataStruct, Error };
 use syn::{ DeriveInput };
-use syn::token::Token;
-use crate::tlv_config::{TlvConfig, get_bytes_format, get_put_bytes, ValueFormat};
+use crate::tlv_config::{TlvConfig, get_bytes_format, get_put_bytes};
 
 use crate::tlv_field:: { get_struct_name };
-use crate::utils::is_u4_type;
 
 // todo add support for LV and TV type, if added re-verify
+
 fn tag_encode(tlv_config: &TlvConfig) -> TokenStream{
 	match tlv_config.tag {
 		Some(tag) => {
 			let tag_bytes_format = get_bytes_format(tlv_config.tag_bytes_format);
 			let put_bytes = get_put_bytes(tlv_config.tag_bytes_format);
 			quote!{
-				let tag = #tag as #tag_bytes_format;
-				bytes.#put_bytes(tag);
+				let __tag: #tag_bytes_format = #tag as #tag_bytes_format;
+				__bytes.#put_bytes(__tag);
 			}
 		}
 		None => {
@@ -33,16 +32,16 @@ fn length_encode(tlv_config: &TlvConfig) -> TokenStream{
 			let length_bytes_format = get_bytes_format(tlv_config.length_bytes_format);
 			let put_bytes = get_put_bytes(tlv_config.length_bytes_format);
 			quote!{
-				let length = #length as #length_bytes_format;
-				bytes.#put_bytes(length);
+				const __length: #length_bytes_format = #length as #length_bytes_format;
+				__bytes.#put_bytes(__length);
 			}
 		}
 		None => {
 			let length_bytes_format = get_bytes_format(tlv_config.length_bytes_format);
 			let put_bytes = get_put_bytes(tlv_config.length_bytes_format);
 			quote!{
-				let length_buf = 0u8 as #length_bytes_format;
-				bytes.#put_bytes(length_buf);
+				let __length_buf: #length_bytes_format = 0u8 as #length_bytes_format;
+				__bytes.#put_bytes(__length_buf);
 			}
 		}
 	}
@@ -55,7 +54,7 @@ fn fix_length_parameter(tlv_config: &TlvConfig) -> TokenStream {
 		}
 		None => {
 			quote! {
-				let fix_length_index = bytes.len();
+				let __fix_length_index = __bytes.len();
 			}
 		}
 	}
@@ -69,45 +68,45 @@ fn fix_length_encode(tlv_config: &TlvConfig) -> TokenStream {
 		None => {
 			let length_bytes_format = tlv_config.length_bytes_format;
 			quote! {
-				bytes[fix_length_index..fix_length_index + #length_bytes_format as usize].copy_from_slice(&actual_length.to_be_bytes());
+				__bytes[__fix_length_index..__fix_length_index + #length_bytes_format as usize].copy_from_slice(&__actual_length.to_be_bytes());
 			}
 		}
 	}
 }
 
-fn fix_value_parameter(tlv_config: &TlvConfig) -> TokenStream{
-	match tlv_config.value_bits_format{
-		ValueFormat::OneByte => quote! {}
-		_ => {
-			quote! {
-				let mut result: Result<usize, tlv::prelude::TlvError>  = Err(TlvError::InCompleteByteInsertion);
-			}
-		}
-	}
-}
-
-fn fix_value_encode(tlv_config: &TlvConfig) -> TokenStream{
-	match tlv_config.value_bits_format{
-		ValueFormat::OneByte => quote! {},
-		ValueFormat::FirstHalf => {
-			quote! {
-				result
-			}
-		}
-		ValueFormat::SecondHalf => {
-			quote! {
-				result = Ok()
-			}
-		}
-	}
-}
+// fn fix_value_parameter(tlv_config: &TlvConfig) -> TokenStream{
+// 	match tlv_config.value_bits_format{
+// 		ValueFormat::OneByte => quote! {}
+// 		_ => {
+// 			quote! {
+// 				let mut result: Result<usize, tlv::prelude::TlvError>  = Err(TlvError::InCompleteByteInsertion);
+// 			}
+// 		}
+// 	}
+// }
+//
+// fn fix_value_encode(tlv_config: &TlvConfig) -> TokenStream{
+// 	match tlv_config.value_bits_format{
+// 		ValueFormat::OneByte => quote! {},
+// 		ValueFormat::FirstHalf => {
+// 			quote! {
+// 				result
+// 			}
+// 		}
+// 		ValueFormat::SecondHalf => {
+// 			quote! {
+// 				result = Ok()
+// 			}
+// 		}
+// 	}
+// }
 
 
 fn impl_tlv_encode(tlv_config: TlvConfig, struct_name: Ident) -> Result<TokenStream, Error> {
 
 	let estimated_size = tlv_config.estimated_size;
 	let initialize_stream = quote! {
-		let mut bytes = BytesMut::with_capacity(#estimated_size);
+		let mut __bytes = BytesMut::with_capacity(#estimated_size);
 	};
 	let length_bytes_format = get_bytes_format(tlv_config.length_bytes_format);
 
@@ -118,7 +117,7 @@ fn impl_tlv_encode(tlv_config: TlvConfig, struct_name: Ident) -> Result<TokenStr
 	let length_stream = length_encode(&tlv_config);
 
 	let encoded_inner_stream = quote! {
-		let actual_length = self.encode_inner(&mut bytes)? as #length_bytes_format;
+		let __actual_length = self.encode_inner(&mut __bytes)? as #length_bytes_format;
 	};
 
 	let fix_length_stream = fix_length_encode(&tlv_config);
@@ -132,7 +131,7 @@ fn impl_tlv_encode(tlv_config: TlvConfig, struct_name: Ident) -> Result<TokenStr
 				#length_stream
 				#encoded_inner_stream
 				#fix_length_stream
-				Ok(bytes.freeze())
+				Ok(__bytes.freeze())
 			}
 		}
 	})
@@ -144,7 +143,7 @@ fn impl_tlv_encode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 	let mut output_stream = Vec::<TokenStream>::new();
 
 	let initialize_stream = quote! {
-		let mut total_length:usize = 0;
+		let mut __total_length:usize = 0;
 	};
 
 	//Todo apply a check for inorder required, array, option
@@ -165,9 +164,9 @@ fn impl_tlv_encode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 			#tag_stream
 			#fix_length_parameter_stream
 			#length_stream
-			total_length += #header_size_bytes as usize;
-			let actual_length = self.#field_name.encode_inner(bytes)? as #length_bytes_format;
-			total_length += actual_length as usize;
+			__total_length += #header_size_bytes as usize;
+			let __actual_length = self.#field_name.encode_inner(__bytes)? as #length_bytes_format;
+			__total_length += __actual_length as usize;
 			#fix_length_stream
 		});
 
@@ -176,10 +175,10 @@ fn impl_tlv_encode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 	Ok(
 		quote! {
 			impl TlvEncodeInner for #struct_name {
-				fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, tlv::prelude::TlvError> {
+				fn encode_inner(&self, __bytes: &mut BytesMut) -> Result<usize, tlv::prelude::TlvError> {
 					#initialize_stream
 					#(#output_stream)*
-					Ok(total_length)
+					Ok(__total_length)
 				}
 			}
 		}

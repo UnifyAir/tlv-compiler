@@ -1,4 +1,4 @@
-use attribute_derive::FromAttr;
+use attribute_derive::{Attribute, FromAttr};
 use proc_macro::Span;
 use syn::Ident;
 
@@ -22,15 +22,11 @@ pub struct TlvConfig{
     #[attribute(optional, default = 1)]
 	pub(crate) length_bytes_format: u8,
 	pub(crate) value: Option<usize>,
-    #[attribute(optional, default = ValueFormat::OneByte)]
-	pub(crate) value_bits_format: ValueFormat,
+    #[attribute(optional, default = 8)]
+	pub(crate) value_bits_format: i8,
 }
-#[derive(Debug)]
-pub enum ValueFormat {
-    OneByte,
-    FirstHalf,
-    SecondHalf
-}
+
+
 pub(crate) fn get_bytes_format(tag_bytes_format: u8) -> Ident {
     match tag_bytes_format {
         1 => {
@@ -55,8 +51,8 @@ pub(crate) fn get_bytes_format(tag_bytes_format: u8) -> Ident {
 }
 
 
-pub(crate) fn get_put_bytes(tag_bytes_format: u8) -> Ident {
-    match tag_bytes_format {
+pub(crate) fn get_put_bytes(bytes_format: u8) -> Ident {
+    match bytes_format {
         1 => {
             Ident::new("put_u8", Span::call_site().into())
         }
@@ -71,6 +67,29 @@ pub(crate) fn get_put_bytes(tag_bytes_format: u8) -> Ident {
         }
         16 => {
             Ident::new("put_u128", Span::call_site().into())
+        }
+        _ => {
+            panic!("Invalid tag_bytes_format")
+        }
+    }
+}
+
+pub(crate) fn get_get_bytes(bytes_format: u8) -> Ident {
+    match bytes_format {
+        1 => {
+            Ident::new("get_u8", Span::call_site().into())
+        }
+        2 => {
+            Ident::new("get_u16", Span::call_site().into())
+        }
+        4 => {
+            Ident::new("get_u32", Span::call_site().into())
+        }
+        8 => {
+            Ident::new("get_u64", Span::call_site().into())
+        }
+        16 => {
+            Ident::new("get_u128", Span::call_site().into())
         }
         _ => {
             panic!("Invalid tag_bytes_format")

@@ -65,7 +65,7 @@ use crate::prelude::TlvError::InCompleteByteInsertion;
 // 	Ok(())
 // }
 
-
+//Todo do some better error handling.
 #[derive(Error, Debug)]
 pub enum TlvError {
 	#[error("unknown error")]

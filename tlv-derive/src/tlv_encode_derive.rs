@@ -192,6 +192,7 @@ pub(crate) fn tlv_encode(token_stream: TokenStream) -> Result<TokenStream, Error
 	let tlv_config: Option<TlvConfig> = TlvConfig::from_attributes(attrs).ok();
 	let struct_name = get_struct_name(token_stream.clone())?;
 	let mut output_stream = Vec::<TokenStream>::new();
+	// todo tlv config is disregarded and this match always goes into some.
 	match tlv_config {
 		Some(tlv_config) => {
 			match data {

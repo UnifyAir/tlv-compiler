@@ -93,7 +93,7 @@ pub trait TlvDecode: Sized {
 
 
 pub trait TlvDecodeInner: Sized {
-	fn decode_inner(bytes: &[u8], length: usize) -> Result<Self, TlvError>;
+	fn decode_inner(bytes: Bytes, length: usize) -> Result<Self, TlvError>;
 }
 
 impl TlvEncodeInner for u8{
@@ -126,21 +126,29 @@ where T: TlvEncodeInner {
 
 
 impl TlvDecodeInner for u8{
-	fn decode_inner(bytes: &[u8], length: usize) -> Result<Self, TlvError> {
-		Ok(bytes[0].clone())
+	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
+		Ok(bytes.get_u8())
 	}
 }
 
 impl<T> TlvDecodeInner for Option<T>
 where T: TlvDecodeInner {
-	fn decode_inner(bytes: &[u8], length: usize) -> Result<Self, TlvError> {
+	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
 		if length > 0 {
-			return Ok(Some(T::decode_inner(bytes, length)?));
+			return Ok(Some(T::decode_inner(bytes.split_to(length), length)?));
 		}
 		Ok(None)
 	}
 }
 
+// impl<T> TlvDecodeInner for Vec<T>
+// where T: TlvDecodeInner {
+// 	fn decode_inner(bytes: &[u8], length: usize) -> Result<Self, TlvError> {
+// 		let mut output = Vec::<T>::with_capacity(length);
+// 		output.push(T::decode_inner())
+// 		Ok(Vec::from(bytes))
+// 	}
+// }
 
 
 // pub enum u4{

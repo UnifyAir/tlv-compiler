@@ -59,7 +59,7 @@ fn impl_tlv_decode(tlv_config: TlvConfig, struct_name: Ident) -> Result<TokenStr
 	let length_stream = length_decode(&tlv_config);
 
 	let encoded_inner_stream = quote! {
-		let __output = Self::decode_inner(__bytes.chunk(), __actual_length)?;
+		let __output = Self::decode_inner(Bytes::copy_from_slice(__bytes.chunk()), __actual_length)?;
 	};
 
 	Ok(quote! {
@@ -82,6 +82,7 @@ fn impl_tlv_decode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 
 	//Todo apply a check for inorder required, array, option
 	//Todo apply a check for inorder first half and second half
+	//Todo option is not working, check the appropriate tag and length
 
 	for field in data_struct.fields {
 		let field_name = field.ident.unwrap();
@@ -101,8 +102,7 @@ fn impl_tlv_decode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 		output_stream.push(quote! {
 			#tag_stream
 			#length_stream
-			__bytes.advance(#header_size_bytes);
-			let #field_name = #field_type::decode_inner(__bytes.chunk(), __actual_length)?;
+			let #field_name = #field_type::decode_inner(__bytes.split_to(__actual_length), __actual_length)?;
 		});
 
 	}
@@ -110,8 +110,7 @@ fn impl_tlv_decode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 	Ok(
 		quote! {
 			impl TlvDecodeInner for #struct_name {
-				fn decode_inner(__data: &[u8], length: usize) -> Result<Self, tlv::prelude::TlvError> {
-					let mut __bytes: Bytes = Bytes::from_owner(__data.clone());
+				fn decode_inner(mut __bytes: Bytes, length: usize) -> Result<Self, tlv::prelude::TlvError> {
 					#(#output_stream)*
 					Ok(#struct_name{
 						#(#field_names),*

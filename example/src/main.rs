@@ -1,34 +1,97 @@
-use tlv_derive::{ TlvEncode };
+// use tlv_derive::{TlvDecode, TlvEncode};
+// use tlv::prelude::*;
+// use tlv::{Buf, Bytes, BytesMut, BufMut};
+// fn main() {
+//     // let lester = Lester{
+//     //     mohan: Some(5)
+//     // };
+//     // let tester = Tester{
+//     //     lester,
+//     //     sohan: 6
+//     // };
+//     // println!("{:?}", tester.encode().unwrap().as_ref());
+// }
+//
+// // #[derive(TlvEncode)]
+// // #[tlv_config(tag=1, length_bytes_format=1, estimated_size=2048)]
+// // pub struct Tester{
+// //     #[tlv_config(tag=2, length_bytes_format=1)]
+// //     lester: Lester,
+// //     #[tlv_config(tag=3, length_bytes_format=1)]
+// //     sohan: u8
+// //
+// // }
+// //
+// // #[derive(TlvEncode)]
+// // #[tlv_config(tag=4, length_bytes_format=1, estimated_size=2048)]
+// // pub struct Lester{
+// //     #[tlv_config(tag=5, length_bytes_format=1)]
+// //     mohan: Option<u8>,
+// //
+// // }
+//
+//
+// #[derive(TlvDecode)]
+// #[tlv_config(tag=12, length_bytes_format=1, length=6, estimated_size=2048)]
+// pub struct Tester{
+//     // #[tlv_config(tag=2, length_bytes_format=1)]
+//     // lester: crate::Lester,
+//     #[tlv_config(tag=3, length_bytes_format=1)]
+//     sohan: u8
+//
+// }
+//
+// // #[derive(TlvDecode)]
+// // #[tlv_config(tag=4, length_bytes_format=1, estimated_size=2048)]
+// // pub struct Lester{
+// //     #[tlv_config(tag=5, length_bytes_format=1)]
+// //     mohan: u8,
+// //
+// // }
+// //
+//
+
+
+
+use tlv_derive::{TlvDecode, TlvEncode};
 use tlv::prelude::*;
-use tlv::{Bytes, BytesMut, BufMut};
-fn main() {
-    let lester = Lester{
-        mohan: Some(5)
-    };
-    let tester = Tester{
-        lester,
-        sohan: 6
-    };
-    println!("{:?}", tester.encode().unwrap().as_ref());
+use tlv::{Buf, Bytes, BytesMut, BufMut};
+fn main() {}
+pub struct Tester {
+    sohan: u8,
+}
+impl TlvDecode for Tester {
+    fn decode(mut __bytes: Bytes) -> Result<Self, tlv::prelude::TlvError> {
+        let __actual_tag: usize = 12usize;
+        __bytes.advance(1usize);
+        let __actual_length: usize = 6usize;
+        __bytes.advance(1usize);
+        let __output = Self::decode_inner(
+            Bytes::from_owner(__bytes.chunk()),
+            __actual_length,
+        )?;
+        Ok(__output)
+    }
+}
+impl TlvDecodeInner for Tester {
+    fn decode_inner(
+        mut __bytes: Bytes,
+        length: usize,
+    ) -> Result<Self, tlv::prelude::TlvError> {
+        let __actual_tag: usize = 3usize;
+        __bytes.advance(1usize);
+        let __actual_length = __bytes.get_u8() as usize;
+        __bytes.advance(2usize);
+        let sohan = u8::decode_inner(
+            Bytes::from_owner(__bytes.chunk()),
+            __actual_length,
+        )?;
+        Ok(Tester { sohan })
+    }
 }
 
-#[derive(TlvEncode)]
-#[tlv_config(tag=1, length_bytes_format=1, estimated_size=2048)]
-pub struct Tester{
-    #[tlv_config(tag=2, length_bytes_format=1)]
-    lester: Lester,
-    #[tlv_config(tag=3, length_bytes_format=1)]
-    sohan: u8
 
-}
 
-#[derive(TlvEncode)]
-#[tlv_config(tag=4, length_bytes_format=1, estimated_size=2048)]
-pub struct Lester{
-    #[tlv_config(tag=5, length_bytes_format=1)]
-    mohan: Option<u8>,
-
-}
 
 
 //

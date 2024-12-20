@@ -27,8 +27,8 @@ pub struct TlvConfig{
 }
 
 
-pub(crate) fn get_bytes_format(tag_bytes_format: u8) -> Ident {
-    match tag_bytes_format {
+pub(crate) fn get_bytes_format(bytes_format: u8) -> Ident {
+    match bytes_format {
         1 => {
             Ident::new("u8", Span::call_site().into())
         }

@@ -15,6 +15,11 @@ use crate::tlv_field::{
 // todo add support for LV and TV type, if added re-verify
 
 fn tag_decode(tlv_config: &TlvConfig) -> TokenStream{
+	if tlv_config.tag_bytes_format == 0 {
+		return quote! {
+			let __actual_tag: usize = 0usize;
+		};
+	}
 	match tlv_config.tag {
 		Some(tag) => {
 			let tag_bytes= tlv_config.tag_bytes_format as usize;
@@ -35,6 +40,11 @@ fn tag_decode(tlv_config: &TlvConfig) -> TokenStream{
 
 
 fn length_decode(tlv_config: &TlvConfig) -> TokenStream{
+	if tlv_config.length_bytes_format == 0 {
+		return quote! {
+			let __actual_length: usize = 0usize;
+		};
+	}
 	match tlv_config.length {
 		Some(length) => {
 			let length_bytes= tlv_config.length_bytes_format as usize;
@@ -75,7 +85,7 @@ fn impl_tlv_decode(tlv_config: TlvConfig, struct_name: Ident) -> Result<TokenStr
 }
 
 
-fn impl_tlv_decode_inner (struct_name: Ident, data_struct: DataStruct) -> Result<TokenStream, Error> {
+fn impl_tlv_decode_inner(struct_name: Ident, data_struct: DataStruct) -> Result<TokenStream, Error> {
 
 	let mut output_stream = Vec::<TokenStream>::new();
 	let mut field_names = Vec::<Ident>::new();
@@ -94,7 +104,7 @@ fn impl_tlv_decode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 			_ => panic!()
 		};
 		let tlv_config= TlvConfig::from_attributes(field.attrs)?;
-		let length_bytes_format = get_bytes_format(tlv_config.length_bytes_format);
+		let length_bytes_format = tlv_config.length_bytes_format;
 		let tag_stream = tag_decode(&tlv_config);
 		let length_stream = length_decode(&tlv_config);
 		let header_size_bytes = (tlv_config.tag_bytes_format + tlv_config.length_bytes_format) as usize;
@@ -102,6 +112,9 @@ fn impl_tlv_decode_inner (struct_name: Ident, data_struct: DataStruct) -> Result
 		output_stream.push(quote! {
 			#tag_stream
 			#length_stream
+			Right now the splitting happens over here, try to do the spliting in the underlying function call
+			as the length is already being forward, this will help in u4 parsing as we can move the cursor one byte
+			backward and upon next call with length = 0, we can determine its the u4 second half.
 			let #field_name = #field_type::decode_inner(__bytes.split_to(__actual_length), __actual_length)?;
 		});
 

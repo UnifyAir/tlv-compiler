@@ -1,5 +1,6 @@
 
 pub use std::io::Write;
+use std::ops::BitOr;
 use bytes::{Buf, BufMut, BytesMut, Bytes};
 use thiserror::Error;
 use crate::prelude::TlvError::InCompleteByteInsertion;
@@ -151,28 +152,40 @@ where T: TlvDecodeInner {
 // }
 
 
-// pub enum u4{
-// 	FirstHalf(u8),
-// 	SecondHalf(u8)
-// }
-// impl TlvEncodeInner for u4{
-// 	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
-// 		match &self {
-// 			u4::FirstHalf(ref byte) => {
-// 				bytes.put_u8(byte << 4);
-// 				Err(InCompleteByteInsertion)
-// 			}
-// 			u4::SecondHalf(ref byte) => {
-// 				let index = bytes.len();
-// 				bytes[index-1..index].copy_from_slice((&byte>>4).to_be_bytes());
-// 				Ok(1usize)
-// 			}
-// 		}
-// 	}
-// }
+pub enum u4{
+	FirstHalf(u8),
+	SecondHalf(u8)
+}
+
+//Fix this
+impl TlvEncodeInner for u4{
+	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+		match &self {
+			u4::FirstHalf(ref byte) => {
+				bytes.put_u8(byte << 4);
+				Ok(1usize)
+			}
+			u4::SecondHalf(ref byte) => {
+				let index = bytes.len();
+				let output: u8 = bytes[index-1] | byte;
+				bytes[index-1..index].copy_from_slice(&output.to_be_bytes());
+				Ok(0usize)
+			}
+		}
+	}
+}
 
 
-
+//Fix this
+impl TlvDecodeInner for u4{
+	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
+		if length == 1 {
+			Ok(u4::FirstHalf(bytes.get_u8() >> 4))
+		} else {
+			Ok(u4::SecondHalf(bytes.get_u8() & 15u8))
+		}
+	}
+}
 
 
 

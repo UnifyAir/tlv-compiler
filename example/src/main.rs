@@ -7,8 +7,8 @@ fn main() {
     };
     let tester = Tester{
         lester,
-        sohan: 6,
-        pohan: 7
+        sohan: u4::FirstHalf(4),
+        pohan: u4::SecondHalf(1)
     };
     let encoded = tester.encode().unwrap();
     println!("{:?}", encoded.as_ref());
@@ -23,9 +23,9 @@ pub struct Tester{
     #[tlv_config(tag=2, length_bytes_format=1)]
     lester: Lester,
     #[tlv_config(tag=3, length_bytes_format=1)]
-    sohan: u8,
-    #[tlv_config(tag=3, length_bytes_format=1)]
-    pohan: u8
+    sohan: u4,
+    #[tlv_config(tag=3, tag_bytes_format=0, length_bytes_format=0)]
+    pohan: u4
 
 }
 

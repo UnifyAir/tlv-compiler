@@ -1,4 +1,17 @@
-use syn::{Type, TypePath};
+use syn::{DeriveInput, Error, Type, TypePath};
+use proc_macro2::{TokenStream, Ident};
+use proc_macro_error::abort_call_site;
+
+pub fn get_struct_name(struct_stream: TokenStream) -> Ident {
+	let input = syn::parse2::<DeriveInput>(struct_stream.clone()).unwrap();
+	match input.data {
+		syn::Data::Struct(_) => input.ident,
+		_ => {
+            abort_call_site!(
+                "It's not a struct, check back !!!");
+        },
+	}
+}
 
 pub fn is_u4_type(ty: &Type) -> bool {
     if let Type::Path(tp) = ty {

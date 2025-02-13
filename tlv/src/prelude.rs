@@ -1,71 +1,7 @@
 
 pub use std::io::Write;
-use std::ops::BitOr;
 use bytes::{Buf, BufMut, BytesMut, Bytes};
 use thiserror::Error;
-use crate::prelude::TlvError::InCompleteByteInsertion;
-// // #[derive(Error, Debug)]
-// pub enum EnDecError<'a> {
-// 	#[error("Io Error: {0}")]
-// 	IoError(
-// 		#[from]
-// 		std::io::Error,
-// 	),
-//
-// 	#[error("Encode error for {0}: {1}")]
-// 	EncodeError(u16, String),
-//
-// 	#[error("Decode error for {0}: {1}")]
-// 	DecodeError(u16, String),
-//
-// 	#[error("New Object Creation Error for {0}: {1}")]
-// 	NewError(u16, String),
-//
-// 	#[error("Decode error for grouped tlv")]
-// 	GroupedTlvMultipleFields(Vec<String>),
-//
-// 	#[error("Required field not specified: {1}")]
-// 	RequiredFieldAbsent(Vec<String>, String),
-//
-// 	#[error("Required field not specified")]
-// 	UnknownTlvPresent(Vec<String>, u16, &'a [u8]),
-//
-// 	#[error("Expected Boundary exceeded data: boundary - {1}")]
-// 	IndexOutOfRange(Vec<String>, usize, &'a [u8]),
-// }
-
-// impl EnDecError<'_> {
-// 	pub fn push_current_function_name(
-// 		&mut self,
-// 		name: String,
-// 	) {
-// 		match self {
-// 			EnDecError::GroupedTlvMultipleFields(inner, ..)
-// 			| EnDecError::RequiredFieldAbsent(inner, ..)
-// 			| EnDecError::UnknownTlvPresent(inner, ..) => {
-// 				inner.push(name);
-// 			}
-// 			_ => (),
-// 		};
-// 	}
-// }
-
-// pub(crate) fn tlv_encode_field<T, W>(
-// 	field: &T,
-// 	writer: &mut W,
-// ) -> Result<(), EnDecError<'static>>
-// where
-// 	T: TlvEncode + TlvLength + TlvTag,
-// 	W: io::Write,
-// {
-// 	let tag = <T as TlvTag>::tag_type();
-// 	let length = TlvLength::length(field);
-// 	writer.write_all(tag.to_be_bytes().as_ref())?;
-// 	writer.write_all(length.to_be_bytes().as_ref())?;
-// 	TlvEncode::encode(field, writer)?;
-// 	Ok(())
-// }
-
 //Todo do some better error handling.
 #[derive(Error, Debug)]
 pub enum TlvError {

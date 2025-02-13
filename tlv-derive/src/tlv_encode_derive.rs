@@ -1,13 +1,13 @@
 use proc_macro2::{Ident, TokenStream};
 use attribute_derive::__private::proc_macro2;
 use attribute_derive::Attribute;
+use proc_macro_error::abort_call_site;
 use quote::quote;
 use syn::{DataStruct, Error };
 use syn::{ DeriveInput };
 use crate::tlv_config::{TlvConfig, get_bytes_format, get_put_bytes};
+use crate::utils::get_struct_name;
 
-use crate::tlv_field:: { get_struct_name };
-use crate::utils::is_u4_type;
 // todo add support for LV and TV type, if added re-verify
 
 fn tag_encode(tlv_config: &TlvConfig) -> TokenStream{
@@ -201,7 +201,7 @@ pub(crate) fn tlv_encode(token_stream: TokenStream) -> Result<TokenStream, Error
 
 	let DeriveInput { attrs, data, .. } = syn::parse2(token_stream.clone())?;
 	let tlv_config: Option<TlvConfig> = TlvConfig::from_attributes(attrs).ok();
-	let struct_name = get_struct_name(token_stream.clone())?;
+	let struct_name = get_struct_name(token_stream.clone());
 	let mut output_stream = Vec::<TokenStream>::new();
 	// todo tlv config is disregarded and this match always goes into some.
 	match tlv_config {
@@ -212,7 +212,7 @@ pub(crate) fn tlv_encode(token_stream: TokenStream) -> Result<TokenStream, Error
 					output_stream.push(impl_tlv_encode_inner(struct_name, data_struct)?);
 				}
 				_ => {
-					panic!()
+					abort_call_site!("Currenly only structs are supported");
 				},
 			}
 		}
@@ -222,7 +222,7 @@ pub(crate) fn tlv_encode(token_stream: TokenStream) -> Result<TokenStream, Error
 					output_stream.push(impl_tlv_encode_inner(struct_name, data_struct)?);
 				}
 				_ => {
-					panic!()
+					abort_call_site!("Currenly only structs are supported");
 				},
 			}
 		}

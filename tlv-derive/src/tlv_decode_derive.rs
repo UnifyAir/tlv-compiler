@@ -1,15 +1,11 @@
-use std::collections::VecDeque;
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, TokenStream};
+use proc_macro_error::abort_call_site;
 use quote::quote;
 use syn::{DataStruct, DeriveInput, Error, Type};
-use crate::tlv_config::{get_bytes_format, get_get_bytes, get_put_bytes, TlvConfig};
+use crate::tlv_config::{get_get_bytes, TlvConfig};
 use attribute_derive::Attribute;
-use crate::tlv_field::{
-	field_type_extractor_from_tag,
-	get_struct_name,
-	get_struct_tag,
-	TlvFieldType,
-};
+use crate::utils::get_struct_name;
+
 
 
 // todo add support for LV and TV type, if added re-verify
@@ -101,7 +97,9 @@ fn impl_tlv_decode_inner(struct_name: Ident, data_struct: DataStruct) -> Result<
 			Type::Path(type_path) => {
 				type_path.path
 			}
-			_ => panic!()
+			_ => {
+				abort_call_site!("Unsupported type in generic");
+			}
 		};
 		let tlv_config= TlvConfig::from_attributes(field.attrs)?;
 		let length_bytes_format = tlv_config.length_bytes_format;
@@ -140,7 +138,7 @@ pub(crate) fn tlv_decode(token_stream: TokenStream) -> Result<TokenStream, Error
 
 	let DeriveInput { attrs, data, .. } = syn::parse2(token_stream.clone())?;
 	let tlv_config: Option<TlvConfig> = TlvConfig::from_attributes(attrs).ok();
-	let struct_name = get_struct_name(token_stream.clone())?;
+	let struct_name = get_struct_name(token_stream.clone());
 	let mut output_stream = Vec::<TokenStream>::new();
 	match tlv_config {
 		Some(tlv_config) => {
@@ -150,7 +148,7 @@ pub(crate) fn tlv_decode(token_stream: TokenStream) -> Result<TokenStream, Error
 					output_stream.push(impl_tlv_decode_inner(struct_name, data_struct)?);
 				}
 				_ => {
-					panic!()
+					abort_call_site!("Currently only struct support");
 				},
 			}
 		}
@@ -161,7 +159,7 @@ pub(crate) fn tlv_decode(token_stream: TokenStream) -> Result<TokenStream, Error
 					todo!()
 				}
 				_ => {
-					panic!()
+					abort_call_site!("Currently only struct support");
 				},
 			}
 		}

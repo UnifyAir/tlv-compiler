@@ -7,7 +7,9 @@ use proc_macro::TokenStream;
 use syn::Error;
 use tlv_decode_derive::tlv_decode;
 use tlv_encode_derive::tlv_encode;
+use proc_macro_error::proc_macro_error;
 
+#[proc_macro_error]
 #[proc_macro_derive(TlvEncode, attributes(tlv_config))]
 pub fn tlv_encode_derive(input: TokenStream) -> TokenStream {
 	let parsed_input: proc_macro2::TokenStream = syn::parse_macro_input!(input);
@@ -15,6 +17,7 @@ pub fn tlv_encode_derive(input: TokenStream) -> TokenStream {
 	output_stream.into()
 }
 
+#[proc_macro_error]
 #[proc_macro_derive(TlvDecode, attributes(tlv_config))]
 pub fn tlv_decode_derive(input: TokenStream) -> TokenStream {
 	let parsed_input: proc_macro2::TokenStream = syn::parse_macro_input!(input);

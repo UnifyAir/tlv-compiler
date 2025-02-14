@@ -2,6 +2,9 @@
 pub use std::io::Write;
 use bytes::{Buf, BufMut, BytesMut, Bytes};
 use thiserror::Error;
+
+
+
 //Todo do some better error handling.
 #[derive(Error, Debug)]
 pub enum TlvError {
@@ -11,72 +14,84 @@ pub enum TlvError {
 	InCompleteByteInsertion
 }
 
+
+
+
+
 pub trait TlvEncode {
 	fn encode(
-		&self
-	) -> Result<Bytes, TlvError>;
-}
-
-pub trait TlvEncodeInner {
-	fn encode_inner(
 		&self,
 		bytes: &mut BytesMut,
 	) -> Result<usize, TlvError>;
 }
+
+// pub trait TlvEncodeInner {
+// 	fn encode_inner(
+// 		&self,
+// 		bytes: &mut BytesMut,
+// 	) -> Result<usize, TlvError>;
+// }
+
+
+
 
 pub trait TlvDecode: Sized {
 	fn decode(bytes: Bytes) -> Result<Self, TlvError>;
 }
 
 
-pub trait TlvDecodeInner: Sized {
-	fn decode_inner(bytes: Bytes, length: usize) -> Result<Self, TlvError>;
-}
+// pub trait TlvDecodeInner: Sized {
+// 	fn decode_inner(bytes: Bytes, length: usize) -> Result<Self, TlvError>;
+// }
 
-impl TlvEncodeInner for u8{
-	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+
+
+
+
+impl TlvEncode for u8{
+	fn encode(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
 		bytes.put_u8(self.to_be());
 		Ok(1usize)
 	}
 }
 
-impl<T> TlvEncodeInner for Option<T>
-where T: TlvEncodeInner {
-	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
-		match &self {
-			Some(inner) => inner.encode_inner(bytes),
-			None => Ok(0usize)
-		}
-	}
-}
+// impl<T> TlvEncodeInner for Option<T>
+// where T: TlvEncodeInner {
+// 	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+// 		match &self {
+// 			Some(inner) => inner.encode_inner(bytes),
+// 			None => Ok(0usize)
+// 		}
+// 	}
+// }
 
-impl<T> TlvEncodeInner for Vec<T>
-where T: TlvEncodeInner {
-	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
-		let mut total_encoded = 0usize;
-		for item in self {
-			total_encoded += item.encode_inner(bytes)?;
-		}
-		Ok(total_encoded)
-	}
-}
+// impl<T> TlvEncodeInner for Vec<T>
+// where T: TlvEncodeInner {
+// 	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+// 		let mut total_encoded = 0usize;
+// 		for item in self {
+// 			total_encoded += item.encode_inner(bytes)?;
+// 		}
+// 		Ok(total_encoded)
+// 	}
+// }
 
 
-impl TlvDecodeInner for u8{
-	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
-		Ok(bytes.get_u8())
-	}
-}
+// impl TlvDecodeInner for u8{
+// 	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
+// 		Ok(bytes.get_u8())
+// 	}
+// }
 
-impl<T> TlvDecodeInner for Option<T>
-where T: TlvDecodeInner {
-	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
-		if length > 0 {
-			return Ok(Some(T::decode_inner(bytes.split_to(length), length)?));
-		}
-		Ok(None)
-	}
-}
+// impl<T> TlvDecodeInner for Option<T>
+// where T: TlvDecodeInner {
+// 	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
+// 		if length > 0 {
+// 			return Ok(Some(T::decode_inner(bytes.split_to(length), length)?));
+// 		}
+// 		Ok(None)
+// 	}
+// }
 
 // impl<T> TlvDecodeInner for Vec<T>
 // where T: TlvDecodeInner {
@@ -88,40 +103,40 @@ where T: TlvDecodeInner {
 // }
 
 
-pub enum u4{
-	FirstHalf(u8),
-	SecondHalf(u8)
-}
+// pub enum u4{
+// 	FirstHalf(u8),
+// 	SecondHalf(u8)
+// }
 
-//Fix this
-impl TlvEncodeInner for u4{
-	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
-		match &self {
-			u4::FirstHalf(ref byte) => {
-				bytes.put_u8(byte << 4);
-				Ok(1usize)
-			}
-			u4::SecondHalf(ref byte) => {
-				let index = bytes.len();
-				let output: u8 = bytes[index-1] | byte;
-				bytes[index-1..index].copy_from_slice(&output.to_be_bytes());
-				Ok(0usize)
-			}
-		}
-	}
-}
+// //Fix this
+// impl TlvEncodeInner for u4{
+// 	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+// 		match &self {
+// 			u4::FirstHalf(ref byte) => {
+// 				bytes.put_u8(byte << 4);
+// 				Ok(1usize)
+// 			}
+// 			u4::SecondHalf(ref byte) => {
+// 				let index = bytes.len();
+// 				let output: u8 = bytes[index-1] | byte;
+// 				bytes[index-1..index].copy_from_slice(&output.to_be_bytes());
+// 				Ok(0usize)
+// 			}
+// 		}
+// 	}
+// }
 
 
-//Fix this
-impl TlvDecodeInner for u4{
-	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
-		if length == 1 {
-			Ok(u4::FirstHalf(bytes.get_u8() >> 4))
-		} else {
-			Ok(u4::SecondHalf(bytes.get_u8() & 15u8))
-		}
-	}
-}
+// //Fix this
+// impl TlvDecodeInner for u4{
+// 	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
+// 		if length == 1 {
+// 			Ok(u4::FirstHalf(bytes.get_u8() >> 4))
+// 		} else {
+// 			Ok(u4::SecondHalf(bytes.get_u8() & 15u8))
+// 		}
+// 	}
+// }
 
 
 

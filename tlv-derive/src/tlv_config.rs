@@ -21,9 +21,9 @@ pub struct TlvConfig{
 	pub(crate) length: Option<usize>,
     #[attribute(optional, default = 1)]
 	pub(crate) length_bytes_format: u8,
-	pub(crate) value: Option<usize>,
-    #[attribute(optional, default = 8)]
-	pub(crate) value_bits_format: i8,
+    #[attribute(optional, default = 1)]
+	pub(crate) value_bytes_format: u8,
+	pub(crate) format: String,
 }
 
 

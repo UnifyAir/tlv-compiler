@@ -1,6 +1,7 @@
 
 pub use std::io::Write;
-use bytes::{Buf, BufMut, BytesMut, Bytes};
+use std::usize;
+pub use bytes::{Buf, BufMut, BytesMut, Bytes};
 use thiserror::Error;
 
 
@@ -36,7 +37,7 @@ pub trait TlvEncode {
 
 
 pub trait TlvDecode: Sized {
-	fn decode(bytes: Bytes) -> Result<Self, TlvError>;
+	fn decode(bytes: Bytes, length: usize) -> Result<Self, TlvError>;
 }
 
 
@@ -77,11 +78,11 @@ impl TlvEncode for u8{
 // }
 
 
-// impl TlvDecodeInner for u8{
-// 	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
-// 		Ok(bytes.get_u8())
-// 	}
-// }
+impl TlvDecode for u8{
+	fn decode(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
+		Ok(bytes.get_u8())
+	}
+}
 
 // impl<T> TlvDecodeInner for Option<T>
 // where T: TlvDecodeInner {

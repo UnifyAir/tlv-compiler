@@ -107,7 +107,7 @@ fn format_tlv_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<TokenSt
 fn format_lv_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<TokenStream, Error> {
     let fix_length_parameter_stream = fix_length_parameter(&tlv_config);
     let length_stream = length_encode(&tlv_config);
-    let header_size_bytes = tlv_config.tag_bytes_format + tlv_config.length_bytes_format;
+    let header_size_bytes = tlv_config.length_bytes_format;
     let fix_length_stream = fix_length_encode(&tlv_config);
 
     Ok(quote! {
@@ -203,7 +203,7 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
 
     //Todo apply a check for inorder required, array, option
 
-    let mut temp_first_value_of_4bit_value: Ident = Ident::new("enum", Span::call_site());
+    let mut temp_first_value_of_4bit_value: Option<Ident> = None;
     let mut is_4bit_value_packed = true;
 
     for field in data_struct.fields {
@@ -214,13 +214,13 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
             "V" => {
                 if tlv_config.value_bytes_format == 0 {
                     if is_4bit_value_packed {
-                        temp_first_value_of_4bit_value = field_name;
+                        temp_first_value_of_4bit_value = Some(field_name);
                         is_4bit_value_packed = false;
                         continue;
                     }
                     output_stream.push(
                         format_4bit_v_encode(
-                            temp_first_value_of_4bit_value.clone(),
+                            temp_first_value_of_4bit_value.clone().unwrap(),
                             field_name,
                             tlv_config,
                         )
@@ -287,17 +287,11 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
 pub(crate) fn tlv_encode(token_stream: TokenStream) -> Result<TokenStream, Error> {
     let DeriveInput { data, .. } = syn::parse2(token_stream.clone())?;
     let struct_name = get_struct_name(token_stream.clone());
-    let mut output_stream = Vec::<TokenStream>::new();
 
     match data {
-        syn::Data::Struct(data_struct) => {
-            output_stream.push(impl_tlv_encode(struct_name, data_struct)?);
-        }
+        syn::Data::Struct(data_struct) => impl_tlv_encode(struct_name, data_struct),
         _ => {
             abort_call_site!("Currenly only structs are supported");
         }
     }
-    Ok(quote! {
-        #(#output_stream)*
-    })
 }

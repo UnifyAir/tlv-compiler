@@ -5,7 +5,6 @@ pub use bytes::{Buf, BufMut, BytesMut, Bytes};
 use thiserror::Error;
 
 
-
 //Todo do some better error handling.
 #[derive(Error, Debug)]
 pub enum TlvError {

@@ -193,7 +193,7 @@ fn format_4bit_v_encode(
     });
 }
 
-fn format_option_type(field_name: Ident, tlv_config: TlvConfig) -> Result<TokenStream, Error> {
+fn format_option_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<TokenStream, Error> {
     // Option with TLV, TV, TLV-E are supported
     let tag_stream = tag_encode(&tlv_config);
     let fix_length_parameter_stream = fix_length_parameter(&tlv_config);
@@ -265,7 +265,7 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
                     {
                         if args.args.len() == 1 {
                             has_optional_fields_started = true;
-                            output_stream.push(format_option_type(field_name, tlv_config).unwrap());
+                            output_stream.push(format_option_encode(field_name, tlv_config).unwrap());
                             continue;
                         } else {
                             abort_call_site!("Option must have exactly one type parameter");
@@ -283,6 +283,7 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
         if has_optional_fields_started {
             abort_call_site!("Optional Fields should be the at the last")
         }
+
         match tlv_config.format.clone().as_str() {
             "V" => {
                 if tlv_config.value_bytes_format == 0 {

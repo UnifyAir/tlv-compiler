@@ -124,6 +124,7 @@ fn format_t_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, E
 
     Ok(quote! {
         #tag_stream
+		let __actual_length = 1usize;
         let #field_name = #field_type::decode(__bytes.split_to(__actual_length), __actual_length)?;
     })
 }
@@ -244,25 +245,28 @@ fn init_option_decoder(
     }
 
     Ok(quote! {
-
         /************************************************************************
          * This Section is super error prone
+		 * Nested match should be more efficient keeping the 4 bit version outside
+		 * Because TV of 1 bytes could match with full 1 byte tag in worst case
+		 * scenerio, if 4bit kept outside this would not be the case.
+		 * 4 bit version should only match with 4 bit tlv_config.tag, currently
+		 * all tags are matched with 4 bit tag. 
          **************************************************************************/
 
+        while __bytes.remaining() != 0 {
+            let __tag: u8 = *__bytes.chunk().first().ok_or(TlvError::Unknown)?;
+            let __4bitTag: u8 = __tag >> 4;
 
-
-        // Make this error handling better.
-        let __tag: u8 = *__bytes.chunk().first().ok_or_else(|| TlvError::Unknown)?;
-        let __4bitTag: u8 = __tag >> 4;
-
-        match __tag as usize {
-            #(#output_stream)*
-            _ => {
-                match __4bitTag as usize {
-                    #(#output_stream)*
-                    _ => {
-                        // Currently panicing for unknown tag, a better impl is required
-                        ::std::panic!("Unknow tag in Optional TLV parsing")
+            match __tag as usize {
+                #(#output_stream)*
+                _ => {
+                    match __4bitTag as usize {
+                        #(#output_stream)*
+                        _ => {
+                            // Currently panicing for unknown tag, a better impl is required
+                            ::std::panic!("Unknown tag in Optional TLV parsing")
+                        }
                     }
                 }
             }

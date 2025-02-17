@@ -143,7 +143,7 @@ fn format_v_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, E
     })
 }
 
-fn format_4bit_v_encode(
+fn format_4bit_v_decode(
     field_1: Field,
     field_2: Field,
     _: TlvConfig,
@@ -331,7 +331,7 @@ fn impl_tlv_decode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
                         continue;
                     }
                     output_stream.push(
-                        format_4bit_v_encode(
+                        format_4bit_v_decode(
                             temp_first_value_of_4bit_value.clone().unwrap(),
                             field,
                             tlv_config,

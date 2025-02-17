@@ -258,13 +258,13 @@ fn init_option_decoder(
         match __tag as usize {
             #(#output_stream)*
             _ => {
-            	match __4bitTag as usize {
-            		#(#output_stream)*
-            		_ => {
-             	   		// Currently panicing for unknown tag, a better impl is required
-                		::std::panic!("Unknow tag in Optional TLV parsing")
-            		}
-        		}
+                match __4bitTag as usize {
+                    #(#output_stream)*
+                    _ => {
+                        // Currently panicing for unknown tag, a better impl is required
+                        ::std::panic!("Unknow tag in Optional TLV parsing")
+                    }
+                }
             }
         }
     })

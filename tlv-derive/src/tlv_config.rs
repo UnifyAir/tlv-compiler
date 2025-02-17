@@ -1,4 +1,4 @@
-use attribute_derive::{Attribute, FromAttr};
+use attribute_derive::FromAttr;
 use proc_macro::Span;
 use syn::Ident;
 
@@ -12,8 +12,6 @@ use syn::Ident;
     conflict = "{first} !!! {second}"
 ))]
 pub struct TlvConfig{
-    #[attribute(optional, default = 1024)]
-    pub(crate) estimated_size: usize,
 	pub(crate) tag: Option<usize>,
     #[attribute(optional, default = 1)]
 	pub(crate) tag_bytes_format: u8,

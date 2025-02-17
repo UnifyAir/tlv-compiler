@@ -56,11 +56,11 @@ impl TlvEncode for u8{
 	}
 }
 
-// impl<T> TlvEncodeInner for Option<T>
-// where T: TlvEncodeInner {
-// 	fn encode_inner(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+// impl<T> TlvEncode for Option<T>
+// where T: TlvEncode {
+// 	fn encode(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
 // 		match &self {
-// 			Some(inner) => inner.encode_inner(bytes),
+// 			Some(inner) => inner.encode(bytes),
 // 			None => Ok(0usize)
 // 		}
 // 	}
@@ -79,7 +79,7 @@ impl TlvEncode for u8{
 
 
 impl TlvDecode for u8{
-	fn decode(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
+	fn decode(mut bytes: Bytes, _length: usize) -> Result<Self, TlvError> {
 		Ok(bytes.get_u8())
 	}
 }

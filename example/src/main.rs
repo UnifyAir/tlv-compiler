@@ -1,6 +1,6 @@
 use tlv_derive::{TlvDecode, TlvEncode};
 use tlv::prelude::*;
-use tlv::{Bytes, BytesMut, BufMut};
+use tlv::{BytesMut, BufMut};
 
 
 fn main() {
@@ -9,30 +9,28 @@ fn main() {
     };
     let tester = Tester{
         lester,
-        // sohan: u4::FirstHalf(4),
-        // pohan: u4::SecondHalf(1)
-        sohan: 3,
-        pohan: 1
+        sohan: 11,
+        pohan: Some(11)
     };
     let mut final_bytes = BytesMut::with_capacity(1024);
     tester.encode(&mut final_bytes).unwrap();
     println!("{:?}", final_bytes.as_ref());
 
-    let tester_new = Tester::decode(final_bytes.clone().into(), final_bytes.len());
-    println!("{}", tester_new.unwrap().pohan);
+    // let tester_new = Tester::decode(final_bytes.clone().into(), final_bytes.len());
+    // println!("{}", tester_new.unwrap().lester.mohan.unwrap());
 }
 
-#[derive(TlvEncode, TlvDecode)]
+#[derive(TlvEncode )]
 pub struct Tester {
     #[tlv_config(tag=2, length_bytes_format=1, format="TLV")]
     lester: Lester,
-    #[tlv_config(tag=5, format="TLV")]
+    #[tlv_config(tag=50, value_bytes_format = 0, format="TLV")]
     sohan: u8,
-    #[tlv_config(tag = 3, tag_bytes_format = 1, length = 1, format="TV")]
-    pohan: u8
+    #[tlv_config(tag = 3, value_bytes_format = 0, format="TLV")]
+    pohan: Option<u8>,
 }
 
-#[derive(TlvEncode, TlvDecode)]
+#[derive(TlvEncode)]
 pub struct Lester{
     #[tlv_config(tag=5, length_bytes_format=1, format="TLV")]
     mohan: u8,

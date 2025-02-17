@@ -2,11 +2,10 @@ use crate::tlv_config::{get_bytes_format, get_put_bytes, TlvConfig};
 use crate::utils::get_struct_name;
 use attribute_derive::Attribute;
 use attribute_derive::__private::proc_macro2;
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, TokenStream};
 use proc_macro_error::abort_call_site;
 use quote::quote;
-use syn::DeriveInput;
-use syn::{DataStruct, Error};
+use syn::{DeriveInput, DataStruct, Error, Type};
 
 fn tag_encode(tlv_config: &TlvConfig) -> TokenStream {
     if tlv_config.tag_bytes_format == 0 {
@@ -194,6 +193,50 @@ fn format_4bit_v_encode(
     });
 }
 
+fn format_option_type(field_name: Ident, tlv_config: TlvConfig) -> Result<TokenStream, Error> {
+    // Option with TLV, TV, TLV-E are supported
+    let tag_stream = tag_encode(&tlv_config);
+    let fix_length_parameter_stream = fix_length_parameter(&tlv_config);
+    let length_stream = length_encode(&tlv_config);
+    let header_size_bytes = tlv_config.tag_bytes_format + tlv_config.length_bytes_format;
+    let fix_length_stream = fix_length_encode(&tlv_config);
+
+    match tlv_config.format.clone().as_str() {
+        "TLV" | "TLV-E" => {
+            return Ok(quote! {
+                    match self.#field_name {
+                        Some(__inner) => {
+				            #tag_stream
+   					        #fix_length_parameter_stream
+            				#length_stream
+            				__total_length += #header_size_bytes as usize;
+            				let __actual_length = __inner.encode(__bytes)?;
+            				__total_length += __actual_length as usize;
+            				#fix_length_stream
+                        }
+                        None => {}
+                    }
+                });
+        }
+		"TV" => {
+			return Ok(quote! {
+				match self.#field_name {
+					Some(__inner) => {
+						#tag_stream
+						__total_length += #header_size_bytes as usize;
+						let __actual_length = __inner.encode(__bytes)?;
+						__total_length += __actual_length as usize;
+					}
+					None => {}
+				}
+			});
+		}
+        _ => {
+            abort_call_site!("Option with TLV, TV, TLV-E are supported")
+        }
+    }
+}
+
 fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenStream, Error> {
     let mut output_stream = Vec::<TokenStream>::new();
 
@@ -206,10 +249,40 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
     let mut temp_first_value_of_4bit_value: Option<Ident> = None;
     let mut is_4bit_value_packed = true;
 
+    let mut has_optional_fields_started = false;
+
     for field in data_struct.fields {
         let field_name = field.ident.unwrap();
         let tlv_config = TlvConfig::from_attributes(field.attrs)?;
 
+        match field.ty {
+            Type::Path(type_path) => {
+                if type_path.path.segments.len() == 1
+                    && type_path.path.segments[0].ident == "Option"
+                {
+                    if let syn::PathArguments::AngleBracketed(args) =
+                        &type_path.path.segments[0].arguments
+                    {
+                        if args.args.len() == 1 {
+                            has_optional_fields_started = true;
+                            output_stream.push(format_option_type(field_name, tlv_config).unwrap());
+                            continue;
+                        } else {
+                            abort_call_site!("Option must have exactly one type parameter");
+                        }
+                    } else {
+                        abort_call_site!("Invalid Option type format");
+                    }
+                }
+            }
+            _ => {
+                abort_call_site!("Unsupported type in generic");
+            }
+        };
+
+        if has_optional_fields_started {
+            abort_call_site!("Optional Fields should be the at the last")
+        }
         match tlv_config.format.clone().as_str() {
             "V" => {
                 if tlv_config.value_bytes_format == 0 {
@@ -231,13 +304,13 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
                     output_stream.push(format_v_encode(field_name, tlv_config).unwrap());
                 }
             }
-            "TLV" => {
+            "TLV" | "TLV-E" => {
                 if !is_4bit_value_packed {
                     abort_call_site!("Two 4bit value should be consecutive")
                 }
                 output_stream.push(format_tlv_encode(field_name, tlv_config).unwrap());
             }
-            "LV" => {
+            "LV" | "LV-E"=> {
                 if !is_4bit_value_packed {
                     abort_call_site!("Two 4bit value should be consecutive")
                 }
@@ -254,18 +327,6 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
                     abort_call_site!("Two 4bit value should be consecutive")
                 }
                 output_stream.push(format_t_encode(field_name, tlv_config).unwrap());
-            }
-            "TLV-E" => {
-                if !is_4bit_value_packed {
-                    abort_call_site!("Two 4bit value should be consecutive")
-                }
-                output_stream.push(format_tlv_encode(field_name, tlv_config).unwrap());
-            }
-            "LV-E" => {
-                if !is_4bit_value_packed {
-                    abort_call_site!("Two 4bit value should be consecutive")
-                }
-                output_stream.push(format_lv_encode(field_name, tlv_config).unwrap());
             }
             _ => {
                 abort_call_site!("Unkown TLV format")

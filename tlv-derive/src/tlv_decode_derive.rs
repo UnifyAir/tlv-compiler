@@ -75,7 +75,7 @@ fn format_tlv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream,
 fn format_lv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, Error>{
     let field_name = field.ident.unwrap();
 	let field_type = match field.ty {
-		Type::Path(type_path) => type_path.path,
+		Type::Path(type_path) => type_path.path,	
 		_ => {
 			abort_call_site!("Unsupported type in generic");
 		}
@@ -168,6 +168,10 @@ fn format_4bit_v_encode(
         #value_stream_1
         #value_stream_2
     });
+}
+
+fn format_option_type(){
+
 }
 
 fn impl_tlv_decode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenStream, Error> {

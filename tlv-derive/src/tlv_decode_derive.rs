@@ -258,10 +258,10 @@ fn init_option_decoder(
             let __tag: u8 = *__bytes.chunk().first().ok_or(TlvError::Unknown)?;
             let __4bitTag: u8 = __tag >> 4;
 
-            match __tag as usize {
+            match __4bitTag as usize {
                 #(#output_stream)*
                 _ => {
-                    match __4bitTag as usize {
+                    match __tag as usize {
                         #(#output_stream)*
                         _ => {
                             // Currently panicing for unknown tag, a better impl is required

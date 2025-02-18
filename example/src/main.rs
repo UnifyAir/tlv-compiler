@@ -29,19 +29,9 @@ fn main() {
     // println!("{:?}", bytes.as_ref());
     // let decoded = OptionalTlv::decode(bytes.clone().into(), len).unwrap();
     // assert_eq!(optional_none, decoded);
-
-
- let optional_all = OptionalMixedStruct {
-        required: 42,
-        optional_tv: Some(43),
-        optional_tlv: Some(44),
-        optional_tlv_e: Some(10)
-    };
-    let mut bytes = BytesMut::with_capacity(32);
-    let len = optional_all.encode(&mut bytes).unwrap();
-    let decoded = OptionalMixedStruct::decode(bytes.clone().into(), len).unwrap();
-    assert_eq!(optional_all, decoded);
 }
+
+
 
 #[derive(TlvEncode, TlvDecode)]
 pub struct Tester {
@@ -69,19 +59,6 @@ pub struct OptionalTlv {
 //     mohan: u8,
 
 // }
-
-// Optional fields mixed struct
-#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
-pub struct OptionalMixedStruct {
-    #[tlv_config(tag=8, length_bytes_format=1, format="TLV")]
-    required: u8,
-    #[tlv_config(tag=9, tag_bytes_format=1, length=1, format="TV")]
-    optional_tv: Option<u8>,
-    #[tlv_config(tag=10, length_bytes_format=1, format="TLV")]
-    optional_tlv: Option<u8>,
-    #[tlv_config(tag=11, length_bytes_format=2, format="TLV-E")]
-    optional_tlv_e: Option<u8>
-}
 
 
 

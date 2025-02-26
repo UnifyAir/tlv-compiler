@@ -5,7 +5,7 @@ use attribute_derive::__private::proc_macro2;
 use proc_macro2::{Ident, TokenStream};
 use proc_macro_error::abort_call_site;
 use quote::quote;
-use syn::{DeriveInput, DataStruct, Error, Type};
+use syn::{DataStruct, DeriveInput, Error, Type};
 
 fn tag_encode(tlv_config: &TlvConfig) -> TokenStream {
     if tlv_config.tag_bytes_format == 0 {
@@ -204,33 +204,33 @@ fn format_option_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<Toke
     match tlv_config.format.clone().as_str() {
         "TLV" | "TLV-E" => {
             return Ok(quote! {
-                    match self.#field_name {
-                        Some(__inner) => {
-				            #tag_stream
-   					        #fix_length_parameter_stream
-            				#length_stream
-            				__total_length += #header_size_bytes as usize;
-            				let __actual_length = __inner.encode(__bytes)?;
-            				__total_length += __actual_length as usize;
-            				#fix_length_stream
-                        }
-                        None => {}
+                match self.#field_name {
+                    Some(__inner) => {
+                        #tag_stream
+                           #fix_length_parameter_stream
+                        #length_stream
+                        __total_length += #header_size_bytes as usize;
+                        let __actual_length = __inner.encode(__bytes)?;
+                        __total_length += __actual_length as usize;
+                        #fix_length_stream
                     }
-                });
+                    None => {}
+                }
+            });
         }
-		"TV" => {
-			return Ok(quote! {
-				match self.#field_name {
-					Some(__inner) => {
-						#tag_stream
-						__total_length += #header_size_bytes as usize;
-						let __actual_length = __inner.encode(__bytes)?;
-						__total_length += __actual_length as usize;
-					}
-					None => {}
-				}
-			});
-		}
+        "TV" => {
+            return Ok(quote! {
+                match self.#field_name {
+                    Some(__inner) => {
+                        #tag_stream
+                        __total_length += #header_size_bytes as usize;
+                        let __actual_length = __inner.encode(__bytes)?;
+                        __total_length += __actual_length as usize;
+                    }
+                    None => {}
+                }
+            });
+        }
         _ => {
             abort_call_site!("Option with TLV, TV, TLV-E are supported")
         }
@@ -265,7 +265,8 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
                     {
                         if args.args.len() == 1 {
                             has_optional_fields_started = true;
-                            output_stream.push(format_option_encode(field_name, tlv_config).unwrap());
+                            output_stream
+                                .push(format_option_encode(field_name, tlv_config).unwrap());
                             continue;
                         } else {
                             abort_call_site!("Option must have exactly one type parameter");
@@ -311,7 +312,7 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
                 }
                 output_stream.push(format_tlv_encode(field_name, tlv_config).unwrap());
             }
-            "LV" | "LV-E"=> {
+            "LV" | "LV-E" => {
                 if !is_4bit_value_packed {
                     abort_call_site!("Two 4bit value should be consecutive")
                 }

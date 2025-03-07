@@ -293,3 +293,168 @@ fn test_optional_vector() {
     let decoded = OptionalVectorStruct::decode(bytes.clone().into(), len).unwrap();
     assert_eq!(empty_vectors, decoded);
 }
+
+// ... existing code ...
+
+// Newtype struct for u8
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct NewTypeU8(u8);
+
+// Newtype struct for Vec<u8>
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct NewTypeVec(Vec<u8>);
+
+// Struct containing newtypes
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct ContainsNewtypes {
+    #[tlv_config(tag=15, length_bytes_format=1, format="TLV")]
+    newtype_u8: NewTypeU8,
+    #[tlv_config(tag=16, length_bytes_format=1, format="TLV")]
+    newtype_vec: NewTypeVec
+}
+
+// Struct with optional newtypes
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct OptionalNewtypes {
+    #[tlv_config(tag=17, length_bytes_format=1, format="TLV")]
+    required_newtype: NewTypeU8,
+    #[tlv_config(tag=18, length_bytes_format=1, format="TLV")]
+    optional_newtype: Option<NewTypeU8>,
+    #[tlv_config(tag=19, length_bytes_format=1, format="TLV")]
+    optional_newtype_vec: Option<NewTypeVec>
+}
+
+// Mixed struct with newtypes and regular types
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct MixedNewtypeStruct {
+    #[tlv_config(tag=20, length_bytes_format=1, format="TLV")]
+    regular_u8: u8,
+    #[tlv_config(tag=21, length_bytes_format=1, format="TLV")]
+    newtype_u8: NewTypeU8,
+    #[tlv_config(tag=22, length_bytes_format=1, format="TLV")]
+    optional_regular: Option<u8>,
+    #[tlv_config(tag=23, length_bytes_format=1, format="TLV")]
+    optional_newtype: Option<NewTypeU8>
+}
+
+#[test]
+fn test_newtype_u8() {
+    let newtype = NewTypeU8(42);
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = newtype.encode(&mut bytes).unwrap();
+    
+    let decoded = NewTypeU8::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(newtype, decoded);
+}
+
+#[test]
+fn test_newtype_vec() {
+    let newtype = NewTypeVec(vec![1, 2, 3, 4, 5]);
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = newtype.encode(&mut bytes).unwrap();
+    
+    let decoded = NewTypeVec::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(newtype, decoded);
+    
+    // Test with empty vector
+    let empty_newtype = NewTypeVec(vec![]);
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = empty_newtype.encode(&mut bytes).unwrap();
+    
+    let decoded = NewTypeVec::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(empty_newtype, decoded);
+}
+
+#[test]
+fn test_contains_newtypes() {
+    let contains_newtypes = ContainsNewtypes {
+        newtype_u8: NewTypeU8(42),
+        newtype_vec: NewTypeVec(vec![1, 2, 3, 4, 5])
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = contains_newtypes.encode(&mut bytes).unwrap();
+    
+    let decoded = ContainsNewtypes::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(contains_newtypes, decoded);
+}
+
+#[test]
+fn test_optional_newtypes() {
+    // Test with all fields present
+    let optional_all = OptionalNewtypes {
+        required_newtype: NewTypeU8(42),
+        optional_newtype: Some(NewTypeU8(43)),
+        optional_newtype_vec: Some(NewTypeVec(vec![1, 2, 3]))
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = optional_all.encode(&mut bytes).unwrap();
+    
+    let decoded = OptionalNewtypes::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(optional_all, decoded);
+    
+    // Test with some fields None
+    let optional_some = OptionalNewtypes {
+        required_newtype: NewTypeU8(42),
+        optional_newtype: None,
+        optional_newtype_vec: Some(NewTypeVec(vec![1, 2, 3]))
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = optional_some.encode(&mut bytes).unwrap();
+    
+    let decoded = OptionalNewtypes::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(optional_some, decoded);
+    
+    // Test with all optional fields None
+    let optional_none = OptionalNewtypes {
+        required_newtype: NewTypeU8(42),
+        optional_newtype: None,
+        optional_newtype_vec: None
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = optional_none.encode(&mut bytes).unwrap();
+    
+    let decoded = OptionalNewtypes::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(optional_none, decoded);
+}
+
+#[test]
+fn test_mixed_newtype_struct() {
+    // Test with all fields present
+    let mixed_all = MixedNewtypeStruct {
+        regular_u8: 42,
+        newtype_u8: NewTypeU8(43),
+        optional_regular: Some(44),
+        optional_newtype: Some(NewTypeU8(45))
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = mixed_all.encode(&mut bytes).unwrap();
+    
+    let decoded = MixedNewtypeStruct::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(mixed_all, decoded);
+    
+    // Test with some fields None
+    let mixed_some = MixedNewtypeStruct {
+        regular_u8: 42,
+        newtype_u8: NewTypeU8(43),
+        optional_regular: None,
+        optional_newtype: Some(NewTypeU8(45))
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = mixed_some.encode(&mut bytes).unwrap();
+    
+    let decoded = MixedNewtypeStruct::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(mixed_some, decoded);
+    
+    // Test with all optional fields None
+    let mixed_none = MixedNewtypeStruct {
+        regular_u8: 42,
+        newtype_u8: NewTypeU8(43),
+        optional_regular: None,
+        optional_newtype: None
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = mixed_none.encode(&mut bytes).unwrap();
+    
+    let decoded = MixedNewtypeStruct::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(mixed_none, decoded);
+}

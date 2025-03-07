@@ -1,5 +1,5 @@
 use crate::tlv_config::{get_get_bytes, TlvConfig};
-use crate::utils::get_struct_name;
+use crate::utils::{get_struct_name, is_newtype};
 use attribute_derive::Attribute;
 use proc_macro2::{Ident, TokenStream};
 use proc_macro_error::abort_call_site;
@@ -391,14 +391,32 @@ fn impl_tlv_decode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
     })
 }
 
+fn impl_newtype_decode(struct_name: Ident) -> Result<TokenStream, Error> {
+    Ok(quote! {
+        impl TlvDecode for #struct_name {
+            fn decode(mut bytes: Bytes, _length: usize) -> Result<Self, tlv::prelude::TlvError> {
+                let inner = <_>::decode(bytes, _length)?;
+                Ok(#struct_name(inner))
+            }
+        }
+    })
+}
+
+
 pub(crate) fn tlv_decode(token_stream: TokenStream) -> Result<TokenStream, Error> {
     let DeriveInput { data, .. } = syn::parse2(token_stream.clone())?;
     let struct_name = get_struct_name(token_stream.clone());
 
     match data {
-        syn::Data::Struct(data_struct) => impl_tlv_decode(struct_name, data_struct),
+        syn::Data::Struct(data_struct) => {
+            if is_newtype(&data_struct) {
+                impl_newtype_decode(struct_name)
+            } else {
+                impl_tlv_decode(struct_name, data_struct)
+            }
+        },
         _ => {
-            abort_call_site!("Currently only struct support");
+            abort_call_site!("Currently only structs are supported");
         }
     }
 }

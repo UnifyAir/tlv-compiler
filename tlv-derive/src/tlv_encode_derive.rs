@@ -244,8 +244,6 @@ fn impl_tlv_encode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
         let mut __total_length:usize = 0;
     };
 
-    //Todo apply a check for inorder required, array, option
-
     let mut temp_first_value_of_4bit_value: Option<Ident> = None;
     let mut is_4bit_value_packed = true;
 

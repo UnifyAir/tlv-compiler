@@ -298,8 +298,6 @@ fn impl_tlv_decode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
     let mut optional_tlvs: Vec<(GenericArgument, Field, TlvConfig)> =
         Vec::<(GenericArgument, Field, TlvConfig)>::new();
 
-    //Todo apply a check for inorder required, array, option
-
     let mut temp_first_value_of_4bit_value: Option<Field> = None;
     let mut is_4bit_value_packed = true;
 

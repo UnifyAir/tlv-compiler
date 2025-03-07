@@ -200,3 +200,96 @@ fn test_optional_mixed() {
     let decoded = OptionalMixedStruct::decode(bytes.clone().into(), len).unwrap();
     assert_eq!(optional_none, decoded);
 }
+
+// Vector TLV struct
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct VectorTlvStruct {
+    #[tlv_config(tag=12, length_bytes_format=1, format="TLV")]
+    bytes: Vec<u8>
+}
+
+// Vector LV struct
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct VectorLvStruct {
+    #[tlv_config(length_bytes_format=1, format="LV")]
+    bytes: Vec<u8>
+}
+
+// Optional Vector TLV struct
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct OptionalVectorStruct {
+    #[tlv_config(tag=13, length_bytes_format=1, format="TLV")]
+    required_bytes: Vec<u8>,
+    #[tlv_config(tag=14, length_bytes_format=1, format="TLV")]
+    optional_bytes: Option<Vec<u8>>
+}
+
+#[test]
+fn test_vector_tlv() {
+    let vector_tlv = VectorTlvStruct { 
+        bytes: vec![1, 2, 3, 4, 5] 
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = vector_tlv.encode(&mut bytes).unwrap();
+    
+    let decoded = VectorTlvStruct::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(vector_tlv, decoded);
+    
+    // Test with empty vector
+    let empty_vector_tlv = VectorTlvStruct { 
+        bytes: vec![] 
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = empty_vector_tlv.encode(&mut bytes).unwrap();
+    
+    let decoded = VectorTlvStruct::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(empty_vector_tlv, decoded);
+}
+
+#[test]
+fn test_vector_lv() {
+    let vector_lv = VectorLvStruct { 
+        bytes: vec![10, 20, 30, 40, 50] 
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = vector_lv.encode(&mut bytes).unwrap();
+    
+    let decoded = VectorLvStruct::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(vector_lv, decoded);
+}
+
+#[test]
+fn test_optional_vector() {
+    // Test with optional vector present
+    let optional_present = OptionalVectorStruct {
+        required_bytes: vec![1, 2, 3],
+        optional_bytes: Some(vec![4, 5, 6])
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = optional_present.encode(&mut bytes).unwrap();
+    
+    let decoded = OptionalVectorStruct::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(optional_present, decoded);
+    
+    // Test with optional vector absent
+    let optional_absent = OptionalVectorStruct {
+        required_bytes: vec![1, 2, 3],
+        optional_bytes: None
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = optional_absent.encode(&mut bytes).unwrap();
+    
+    let decoded = OptionalVectorStruct::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(optional_absent, decoded);
+    
+    // Test with empty vectors
+    let empty_vectors = OptionalVectorStruct {
+        required_bytes: vec![],
+        optional_bytes: Some(vec![])
+    };
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = empty_vectors.encode(&mut bytes).unwrap();
+    
+    let decoded = OptionalVectorStruct::decode(bytes.clone().into(), len).unwrap();
+    assert_eq!(empty_vectors, decoded);
+}

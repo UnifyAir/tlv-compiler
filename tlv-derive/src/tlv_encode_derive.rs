@@ -204,7 +204,7 @@ fn format_option_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<Toke
     match tlv_config.format.clone().as_str() {
         "TLV" | "TLV-E" => {
             return Ok(quote! {
-                match self.#field_name {
+                match &self.#field_name {
                     Some(__inner) => {
                         #tag_stream
                            #fix_length_parameter_stream
@@ -220,7 +220,7 @@ fn format_option_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<Toke
         }
         "TV" => {
             return Ok(quote! {
-                match self.#field_name {
+                match &self.#field_name {
                     Some(__inner) => {
                         #tag_stream
                         __total_length += #header_size_bytes as usize;

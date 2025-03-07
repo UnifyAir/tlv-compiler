@@ -66,7 +66,7 @@ fn format_tlv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream,
     Ok(quote! {
         #tag_stream
         #length_stream
-        let #field_name = #field_type::decode(__bytes.split_to(__actual_length), __actual_length)?;
+        let #field_name = <#field_type>::decode(__bytes.split_to(__actual_length), __actual_length)?;
     })
 }
 
@@ -82,7 +82,7 @@ fn format_lv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, 
 
     Ok(quote! {
         #length_stream
-        let #field_name = #field_type::decode(__bytes.split_to(__actual_length), __actual_length)?;
+        let #field_name = <#field_type>::decode(__bytes.split_to(__actual_length), __actual_length)?;
     })
 }
 
@@ -107,7 +107,7 @@ fn format_tv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, 
         let length = tlv_config.length.expect("LENGTH is required to type Tv") as usize;
         return Ok(quote! {
             #tag_stream
-            let #field_name = #field_type::decode(__bytes.split_to(#length), #length)?;
+            let #field_name = <#field_type>::decode(__bytes.split_to(#length), #length)?;
         });
     }
 }
@@ -125,7 +125,7 @@ fn format_t_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, E
     Ok(quote! {
         #tag_stream
 		let __actual_length = 1usize;
-        let #field_name = #field_type::decode(__bytes.split_to(__actual_length), __actual_length)?;
+        let #field_name = <#field_type>::decode(__bytes.split_to(__actual_length), __actual_length)?;
     })
 }
 
@@ -140,7 +140,7 @@ fn format_v_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, E
 
     let length = tlv_config.length.expect("LENGTH is required to type Tv") as usize;
     Ok(quote! {
-        let #field_name = #field_type::decode(__bytes.split_to(#length), #length)?;
+        let #field_name = <#field_type>::decode(__bytes.split_to(#length), #length)?;
     })
 }
 
@@ -188,7 +188,7 @@ fn format_option_decode(
             return Ok(quote! {
                 #tag_stream
                 #length_stream
-                #field_name = Some(#generic::decode(__bytes.split_to(__actual_length), __actual_length)?);
+                #field_name = Some(<#generic>::decode(__bytes.split_to(__actual_length), __actual_length)?);
             });
         }
         "TV" => {
@@ -212,7 +212,7 @@ fn format_option_decode(
                 let length = tlv_config.length.expect("LENGTH is required to type Tv") as usize;
                 return Ok(quote! {
                     #tag_stream
-                    #field_name = Some(#generic::decode(__bytes.split_to(#length), #length)?);
+                    #field_name = Some(<#generic>::decode(__bytes.split_to(#length), #length)?);
                 });
             }
         }

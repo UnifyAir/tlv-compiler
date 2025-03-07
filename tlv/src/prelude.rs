@@ -1,28 +1,19 @@
-
+pub use bytes::{Buf, BufMut, Bytes, BytesMut};
 pub use std::io::Write;
 use std::usize;
-pub use bytes::{Buf, BufMut, BytesMut, Bytes};
 use thiserror::Error;
-
 
 //Todo do some better error handling.
 #[derive(Error, Debug)]
 pub enum TlvError {
-	#[error("unknown error")]
-	Unknown,
-	#[error("Incomplete byte exist probabily because last insertion was u4 without any spare or remaining u4")]
-	InCompleteByteInsertion
+    #[error("unknown error")]
+    Unknown,
+    #[error("Incomplete byte exist probabily because last insertion was u4 without any spare or remaining u4")]
+    InCompleteByteInsertion,
 }
 
-
-
-
-
 pub trait TlvEncode {
-	fn encode(
-		&self,
-		bytes: &mut BytesMut,
-	) -> Result<usize, TlvError>;
+    fn encode(&self, bytes: &mut BytesMut) -> Result<usize, TlvError>;
 }
 
 // pub trait TlvEncodeInner {
@@ -32,29 +23,27 @@ pub trait TlvEncode {
 // 	) -> Result<usize, TlvError>;
 // }
 
-
-
-
 pub trait TlvDecode: Sized {
-	fn decode(bytes: Bytes, length: usize) -> Result<Self, TlvError>;
+    fn decode(bytes: Bytes, length: usize) -> Result<Self, TlvError>;
 }
-
 
 // pub trait TlvDecodeInner: Sized {
 // 	fn decode_inner(bytes: Bytes, length: usize) -> Result<Self, TlvError>;
 // }
 
-
-
-
-
-impl TlvEncode for u8{
-	fn encode(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
-		bytes.put_u8(self.to_be());
-		Ok(1usize)
-	}
+impl TlvEncode for u8 {
+    fn encode(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+        bytes.put_u8(self.to_be());
+        Ok(1usize)
+    }
 }
 
+impl TlvEncode for Vec<u8> {
+    fn encode(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
+		bytes.put(self.as_ref());
+		Ok(self.len())
+	}
+}
 // impl<T> TlvEncode for Option<T>
 // where T: TlvEncode {
 // 	fn encode(&self, bytes: &mut BytesMut) -> Result<usize, TlvError> {
@@ -76,13 +65,19 @@ impl TlvEncode for u8{
 // 	}
 // }
 
-
-impl TlvDecode for u8{
-	fn decode(mut bytes: Bytes, _length: usize) -> Result<Self, TlvError> {
-		Ok(bytes.get_u8())
-	}
+impl TlvDecode for u8 {
+    fn decode(mut bytes: Bytes, _length: usize) -> Result<Self, TlvError> {
+        Ok(bytes.get_u8())
+    }
 }
 
+impl TlvDecode for Vec<u8> {
+	fn decode(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
+		let mut output = vec![0; length];
+		bytes.copy_to_slice(&mut output);
+		Ok(output)
+	}
+}
 // impl<T> TlvDecodeInner for Option<T>
 // where T: TlvDecodeInner {
 // 	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
@@ -101,7 +96,6 @@ impl TlvDecode for u8{
 // 		Ok(Vec::from(bytes))
 // 	}
 // }
-
 
 // pub enum u4{
 // 	FirstHalf(u8),
@@ -126,7 +120,6 @@ impl TlvDecode for u8{
 // 	}
 // }
 
-
 // //Fix this
 // impl TlvDecodeInner for u4{
 // 	fn decode_inner(mut bytes: Bytes, length: usize) -> Result<Self, TlvError> {
@@ -137,12 +130,6 @@ impl TlvDecode for u8{
 // 		}
 // 	}
 // }
-
-
-
-
-
-
 
 // ====================================================================================
 
@@ -156,8 +143,6 @@ impl TlvDecode for u8{
 // 	#[tlv_config(length_type=2_byte, length=7, tag_type=2_byte, tag=123)]
 //     pub a: Option<MyIE2>,
 // }
-
-
 
 // #[derive(FromAttr, Debug)]
 // #[attribute(ident = ident, aliases = [a, b])]
@@ -196,7 +181,6 @@ impl TlvDecode for u8{
 // }
 // #[tag_type = u8]
 // pub struct myu8(u8);
-
 
 // #[derive(Custom)]
 // pub struct Tester{

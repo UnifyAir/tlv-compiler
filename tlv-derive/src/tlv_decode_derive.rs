@@ -258,18 +258,35 @@ fn init_option_decoder(
             let __tag: u8 = *__bytes.chunk().first().ok_or(TlvError::Unknown)?;
             let __4bitTag: u8 = __tag >> 4;
 
-            match __4bitTag as usize {
-                #(#output_stream)*
-                _ => {
-                    match __tag as usize {
-                        #(#output_stream)*
-                        _ => {
-                            // Currently panicing for unknown tag, a better impl is required
-                            ::std::panic!("Unknown tag in Optional TLV parsing")
-                        }
+            if (__4bitTag < 0x8) {
+                match __tag as usize {
+                    #(#output_stream)*
+                    _ => {
+                        // Currently panicing for unknown tag, a better impl is required
+                        ::std::panic!("Unknown tag in Optional TLV parsing")
+                    }
+                }
+            } else {
+                match __4bitTag as usize {
+                    #(#output_stream)*
+                    _ => {
+                        // Currently panicing for unknown tag, a better impl is required
+                        ::std::panic!("Unknown tag in Optional TLV parsing")
                     }
                 }
             }
+            // match __4bitTag as usize {
+            //     #(#output_stream)*
+            //     _ => {
+            //         match __tag as usize {
+            //             #(#output_stream)*
+            //             _ => {
+            //                 // Currently panicing for unknown tag, a better impl is required
+            //                 ::std::panic!("Unknown tag in Optional TLV parsing")
+            //             }
+            //         }
+            //     }
+            // }
         }
     })
 }

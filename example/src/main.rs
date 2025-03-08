@@ -98,6 +98,10 @@ pub struct NasRegistrationRequest {
 
     #[tlv_config(tag_bytes_format = 0, length_bytes_format = 2, format = "LV-E")]
     nas_5gs_mobile_identity: FivegsMobileIdentity,
+
+      /* Optional fields */
+    #[tlv_config(tag = 0xC, tag_bytes_format = 0, length = 0, length_bytes_format = 0, format = "TV")]
+    nas_non_current_native_nas_key_set_identifier: Option<KeySetIdentifier>,
 }
 
 // #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]

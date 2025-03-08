@@ -218,7 +218,7 @@ fn format_option_decode(
                 // Its a 4bit tag 4bit valie case
                 let _tag = tlv_config.tag.expect("TAG is required to type Tv") as u8;
                 return Ok(quote! {
-                    #field_name = Some(__bytes.get_u8() & 0b00001111);
+                    #field_name = Some(<#generic>::from(__bytes.get_u8() & 0b00001111));
                 });
             } else {
                 // Its a 1 or more byte tag and 1 or mote byte value case

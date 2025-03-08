@@ -1,6 +1,7 @@
 use tlv_derive::{TlvDecode, TlvEncode};
 use tlv::prelude::*;
 use tlv::{BytesMut, BufMut};
+use derive_more::{Into, From};
 
 fn main() {
     // let lester = Lester{
@@ -43,17 +44,69 @@ fn main() {
 }
 
 
+// #[derive(Debug, TlvEncode, TlvDecode)]
+// pub struct AtsssContainer(Vec<u8>);
+
+
 #[derive(Debug, TlvEncode, TlvDecode)]
-pub struct AtsssContainer(Vec<u8>);
+pub struct ExtendedProtocolDiscriminator(u8);
 
 
-#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
-pub struct VectorTlvStruct {
-    #[tlv_config(tag=13, length_bytes_format=1, format="TLV")]
-    mohan: u8,
-    #[tlv_config(tag=12, length_bytes_format=1, format="TLV")]
-    lohan: Vec<u8>,
+#[derive(Debug, TlvEncode, TlvDecode, Into, From, Clone)]
+pub struct SecurityHeaderType(u8);
+
+
+#[derive(Debug, TlvEncode, TlvDecode, Into, From, Clone)]
+pub struct SpareHalfOctet(u8);
+
+
+#[derive(Debug, TlvEncode, TlvDecode)]
+pub struct MessageType(u8);
+
+
+#[derive(Debug, TlvEncode, TlvDecode, Into, From, Clone)]
+pub struct FivegsRegistrationType(u8);
+
+
+#[derive(Debug, TlvEncode, TlvDecode, Into, From, Clone)]
+pub struct KeySetIdentifier(u8);
+
+
+#[derive(Debug, TlvEncode, TlvDecode)]
+pub struct FivegsMobileIdentity(Vec<u8>);
+
+#[derive(Debug, TlvEncode, TlvDecode)]
+pub struct NasRegistrationRequest {
+    /* Mandatory fields */
+    #[tlv_config(tag_bytes_format = 0, length = 1, length_bytes_format = 0, format = "V")]
+    nas_extended_protocol_discriminator: ExtendedProtocolDiscriminator,
+
+    #[tlv_config(tag_bytes_format = 0, length = 0, length_bytes_format = 0, value_bytes_format = 0, format = "V")]
+    nas_security_header_type: SecurityHeaderType,
+
+    #[tlv_config(tag_bytes_format = 0, length = 0, length_bytes_format = 0, value_bytes_format = 0, format = "V")]
+    nas_spare_half_octet: SpareHalfOctet,
+
+    #[tlv_config(tag_bytes_format = 0, length = 1, length_bytes_format = 0, format = "V")]
+    nas_registration_request_message_identity: MessageType,
+
+    #[tlv_config(tag_bytes_format = 0, length = 0, length_bytes_format = 0, value_bytes_format = 0, format = "V")]
+    nas_5gs_registration_type: FivegsRegistrationType,
+
+    #[tlv_config(tag_bytes_format = 0, length = 0, length_bytes_format = 0, value_bytes_format = 0, format = "V")]
+    nas_ngksi: KeySetIdentifier,
+
+    #[tlv_config(tag_bytes_format = 0, length_bytes_format = 2, format = "LV-E")]
+    nas_5gs_mobile_identity: FivegsMobileIdentity,
 }
+
+// #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+// pub struct VectorTlvStruct {
+//     #[tlv_config(tag=13, length_bytes_format=1, format="TLV")]
+//     mohan: u8,
+//     #[tlv_config(tag=12, length_bytes_format=1, format="TLV")]
+//     lohan: Vec<u8>,
+// }
 
 // fn test_vector_tlv() {
 //     let vector_tlv = VectorTlvStruct { 

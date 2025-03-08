@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 tlv-derive = { path = "../tlv-derive" }
 tlv = { path = "../tlv"}
+
+derive_more = { version = "2", features = ["from", "into"] }

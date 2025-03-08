@@ -179,10 +179,10 @@ fn format_4bit_v_encode(
 ) -> Result<TokenStream, Error> {
     // Its a 4bit & 4bit value case
     let value_stream_1: TokenStream = quote! {
-        let __value_1: u8 = self.#field_name_1.to_be()<<4;
+        let __value_1: u8 = u8::from(self.#field_name_1.clone()).to_be()<<4;
     };
     let value_stream_2: TokenStream = quote! {
-        let __value_2: u8 = self.#field_name_2.to_be();
+        let __value_2: u8 = u8::from(self.#field_name_2.clone()).to_be();
     };
     return Ok(quote! {
         #value_stream_1

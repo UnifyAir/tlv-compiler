@@ -151,13 +151,27 @@ fn format_4bit_v_decode(
 ) -> Result<TokenStream, Error> {
     // Its a 4bit & 4bit value case
     let field_name_1 = field_1.ident.unwrap();
+    let field_type_1 = match field_1.ty {
+        Type::Path(type_path) => type_path.path,
+        _ => {
+            abort_call_site!("Unsupported type in 4-bit value field");
+        }
+    };
     let value_stream_1: TokenStream = quote! {
-        let #field_name_1: u8 = __chunk >> 4;
+        let #field_name_1: #field_type_1 = <#field_type_1>::from(__chunk >> 4);
     };
+
     let field_name_2 = field_2.ident.unwrap();
-    let value_stream_2: TokenStream = quote! {
-        let #field_name_2: u8 = __chunk & 0b00001111;
+    let field_type_2 = match field_2.ty {
+        Type::Path(type_path) => type_path.path,
+        _ => {
+            abort_call_site!("Unsupported type in 4-bit value field");
+        }
     };
+    let value_stream_2: TokenStream = quote! {
+        let #field_name_2: #field_type_2 = <#field_type_2>::from(__chunk & 0b00001111);
+    };
+
     return Ok(quote! {
         let __chunk = __bytes.get_u8();
         #value_stream_1

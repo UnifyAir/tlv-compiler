@@ -14,7 +14,8 @@ fn main() {
   let mut bytes = BytesMut::with_capacity(32);
   let len = optional_present.encode(&mut bytes).unwrap();
   println!("{:?}", bytes.as_ref());
-  let decoded = OptionalVectorStruct::decode(bytes.clone().into(), len).unwrap();
+  let mut new_bytes = bytes.freeze();
+  let decoded = OptionalVectorStruct::decode(&mut new_bytes, len).unwrap();
 
   println!("{:?}", decoded);
     // let lester = Lester{

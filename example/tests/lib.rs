@@ -7,14 +7,14 @@ use tlv::{BytesMut, BufMut};
 // Basic TLV struct
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct BasicTlv {
-    #[tlv_config(tag=1, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=42, length_bytes_format=1, format="TLV")]
     value: u8
 }
 
 // TLV-E struct
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct TlvEStruct {
-    #[tlv_config(tag=2, length_bytes_format=2, format="TLV-E")]
+    #[tlv_config(tag=56, length_bytes_format=2, format="TLV-E")]
     value: u8
 }
 
@@ -35,14 +35,14 @@ pub struct LvEStruct {
 // TV struct with 1-byte tag
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct TvStruct {
-    #[tlv_config(tag=3, tag_bytes_format=1, length=1, format="TV")]
+    #[tlv_config(tag=73, tag_bytes_format=1, length=1, format="TV")]
     value: u8
 }
 
 // TV struct with 4-bit tag and value
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct Tv4BitStruct {
-    #[tlv_config(tag=4, tag_bytes_format=0, format="TV")]
+    #[tlv_config(tag=9, tag_bytes_format=0, format="TV")]
     value: u8
 }
 
@@ -58,13 +58,13 @@ pub struct FourBitPairStruct {
 // Complex mixed format struct
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct ComplexMixedStruct {
-    #[tlv_config(tag=5, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=65, length_bytes_format=1, format="TLV")]
     tlv_field: u8,
-    #[tlv_config(tag=6, tag_bytes_format=1, length=1, format="TV")]
+    #[tlv_config(tag=78, tag_bytes_format=1, length=1, format="TV")]
     tv_field: u8,
     #[tlv_config(length_bytes_format=1, format="LV")]
     lv_field: u8,
-    #[tlv_config(tag=7, length_bytes_format=2, format="TLV-E")]
+    #[tlv_config(tag=91, length_bytes_format=2, format="TLV-E")]
     tlv_e_field: u8,
     #[tlv_config(format="V", value_bytes_format=0)]
     four_bit_1: u8,
@@ -75,13 +75,13 @@ pub struct ComplexMixedStruct {
 // Optional fields mixed struct
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct OptionalMixedStruct {
-    #[tlv_config(tag=8, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=80, length_bytes_format=1, format="TLV")]
     required: u8,
-    #[tlv_config(tag=9, tag_bytes_format=1, length=1, format="TV")]
+    #[tlv_config(tag=90, tag_bytes_format=1, length=1, format="TV")]
     optional_tv: Option<u8>,
-    #[tlv_config(tag=10, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=30, length_bytes_format=1, format="TLV")]
     optional_tlv: Option<u8>,
-    #[tlv_config(tag=11, length_bytes_format=2, format="TLV-E")]
+    #[tlv_config(tag=100, length_bytes_format=2, format="TLV-E")]
     optional_tlv_e: Option<u8>
 }
 
@@ -204,7 +204,7 @@ fn test_optional_mixed() {
 // Vector TLV struct
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct VectorTlvStruct {
-    #[tlv_config(tag=12, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=68, length_bytes_format=1, format="TLV")]
     bytes: Vec<u8>
 }
 
@@ -218,9 +218,9 @@ pub struct VectorLvStruct {
 // Optional Vector TLV struct
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct OptionalVectorStruct {
-    #[tlv_config(tag=13, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=71, length_bytes_format=1, format="TLV")]
     required_bytes: Vec<u8>,
-    #[tlv_config(tag=14, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=82, length_bytes_format=1, format="TLV")]
     optional_bytes: Option<Vec<u8>>
 }
 
@@ -307,33 +307,33 @@ pub struct NewTypeVec(Vec<u8>);
 // Struct containing newtypes
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct ContainsNewtypes {
-    #[tlv_config(tag=15, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=53, length_bytes_format=1, format="TLV")]
     newtype_u8: NewTypeU8,
-    #[tlv_config(tag=16, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=77, length_bytes_format=1, format="TLV")]
     newtype_vec: NewTypeVec
 }
 
 // Struct with optional newtypes
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct OptionalNewtypes {
-    #[tlv_config(tag=17, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=49, length_bytes_format=1, format="TLV")]
     required_newtype: NewTypeU8,
-    #[tlv_config(tag=18, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=95, length_bytes_format=1, format="TLV")]
     optional_newtype: Option<NewTypeU8>,
-    #[tlv_config(tag=19, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=103, length_bytes_format=1, format="TLV")]
     optional_newtype_vec: Option<NewTypeVec>
 }
 
 // Mixed struct with newtypes and regular types
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct MixedNewtypeStruct {
-    #[tlv_config(tag=20, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=62, length_bytes_format=1, format="TLV")]
     regular_u8: u8,
-    #[tlv_config(tag=21, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=87, length_bytes_format=1, format="TLV")]
     newtype_u8: NewTypeU8,
-    #[tlv_config(tag=22, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=108, length_bytes_format=1, format="TLV")]
     optional_regular: Option<u8>,
-    #[tlv_config(tag=23, length_bytes_format=1, format="TLV")]
+    #[tlv_config(tag=119, length_bytes_format=1, format="TLV")]
     optional_newtype: Option<NewTypeU8>
 }
 

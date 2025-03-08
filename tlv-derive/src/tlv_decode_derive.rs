@@ -124,7 +124,7 @@ fn format_t_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, E
 
     Ok(quote! {
         #tag_stream
-		let __actual_length = 1usize;
+        let __actual_length = 1usize;
         let #field_name = <#field_type>::decode(__bytes.split_to(__actual_length), __actual_length)?;
     })
 }
@@ -243,7 +243,8 @@ fn init_option_decoder(
         return Ok(quote! {});
     }
 
-    let mut output_stream: Vec<TokenStream> = Vec::<TokenStream>::new();
+    let mut tag_8_bit_output_stream: Vec<TokenStream> = Vec::<TokenStream>::new();
+    let mut tag_4_bit_output_stream: Vec<TokenStream> = Vec::<TokenStream>::new();
 
     for (opt_tlv_generic, opt_tlv_field, opt_tlv_tlv_config) in optional_tlvs {
         let opt_tag = opt_tlv_tlv_config
@@ -251,42 +252,63 @@ fn init_option_decoder(
             .expect("TAG is required for optional tlvs");
         let format_option_decode_stream =
             format_option_decode(opt_tlv_generic, opt_tlv_field, opt_tlv_tlv_config).unwrap();
-        output_stream.push(quote! {
-            #opt_tag => {
-                #format_option_decode_stream
-            }
-        });
+
+        if opt_tag > 0xf {
+            tag_8_bit_output_stream.push(quote! {
+                #opt_tag => {
+                    #format_option_decode_stream
+                }
+            });
+        } else {
+            tag_4_bit_output_stream.push(quote! {
+                #opt_tag => {
+                    #format_option_decode_stream
+                }
+            });
+        }
     }
+
+    let tag_4_bit_extension_stream: TokenStream = if tag_4_bit_output_stream.len() != 0 {
+        quote! {
+            let __4bitTag: u8 = __tag >> 4;
+
+            if (__tag >= 0x80) {
+                // Tag is 4bit
+                match __4bitTag as usize {
+                    #(#tag_4_bit_output_stream)*
+                    _ => {
+                        // Currently panicing for unknown tag, a better impl is required
+                        ::std::panic!("Unknown 4bit tag in Optional TLV parsing")
+                    }
+                }
+                continue;
+            }
+        }
+    } else {
+        quote! {}
+    };
 
     Ok(quote! {
         /************************************************************************
          * This Section is super error prone
-		 * Nested match should be more efficient keeping the 4 bit version outside
-		 * Because TV of 1 bytes could match with full 1 byte tag in worst case
-		 * scenerio, if 4bit kept outside this would not be the case.
-		 * 4 bit version should only match with 4 bit tlv_config.tag, currently
-		 * all tags are matched with 4 bit tag. 
+         * Nested match should be more efficient keeping the 4 bit version outside
+         * Because TV of 1 bytes could match with full 1 byte tag in worst case
+         * scenerio, if 4bit kept outside this would not be the case.
+         * 4 bit version should only match with 4 bit tlv_config.tag, currently
+         * all tags are matched with 4 bit tag.
          **************************************************************************/
 
         while __bytes.remaining() != 0 {
             let __tag: u8 = *__bytes.chunk().first().ok_or(TlvError::Unknown)?;
-            let __4bitTag: u8 = __tag >> 4;
 
-            if (__4bitTag < 0x8) {
-                match __tag as usize {
-                    #(#output_stream)*
-                    _ => {
-                        // Currently panicing for unknown tag, a better impl is required
-                        ::std::panic!("Unknown tag in Optional TLV parsing")
-                    }
-                }
-            } else {
-                match __4bitTag as usize {
-                    #(#output_stream)*
-                    _ => {
-                        // Currently panicing for unknown tag, a better impl is required
-                        ::std::panic!("Unknown tag in Optional TLV parsing")
-                    }
+            #tag_4_bit_extension_stream
+
+            // Tag is 8bit
+            match __tag as usize {
+                #(#tag_8_bit_output_stream)*
+                _ => {
+                    // Currently panicing for unknown tag, a better impl is required
+                    ::std::panic!("Unknown 8bit tag in Optional TLV parsing")
                 }
             }
             // match __4bitTag as usize {
@@ -431,7 +453,6 @@ fn impl_newtype_decode(struct_name: Ident) -> Result<TokenStream, Error> {
     })
 }
 
-
 pub(crate) fn tlv_decode(token_stream: TokenStream) -> Result<TokenStream, Error> {
     let DeriveInput { data, .. } = syn::parse2(token_stream.clone())?;
     let struct_name = get_struct_name(token_stream.clone());
@@ -443,7 +464,7 @@ pub(crate) fn tlv_decode(token_stream: TokenStream) -> Result<TokenStream, Error
             } else {
                 impl_tlv_decode(struct_name, data_struct)
             }
-        },
+        }
         _ => {
             abort_call_site!("Currently only structs are supported");
         }

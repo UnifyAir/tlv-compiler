@@ -30,17 +30,21 @@ fn main() {
     // let decoded = OptionalTlv::decode(bytes.clone().into(), len).unwrap();
     // assert_eq!(optional_none, decoded);
 
-    let a: VectorTlvStruct = VectorTlvStruct{
-        lohan: vec![1, 2, 4],
-        mohan: 7
-    };
+    // let a: VectorTlvStruct = VectorTlvStruct{
+    //     lohan: vec![1, 2, 4],
+    //     mohan: 7
+    // };
 
-    let mut final_bytes = BytesMut::with_capacity(1024);
-    a.encode(&mut final_bytes).unwrap();
-    println!("{:?}", final_bytes.as_ref());
-    let reverse = VectorTlvStruct::decode(final_bytes.clone().into(), final_bytes.len());
-    println!("{:?}", reverse.unwrap().lohan);
+    // let mut final_bytes = BytesMut::with_capacity(1024);
+    // a.encode(&mut final_bytes).unwrap();
+    // println!("{:?}", final_bytes.as_ref());
+    // let reverse = VectorTlvStruct::decode(final_bytes.clone().into(), final_bytes.len());
+    // println!("{:?}", reverse.unwrap().lohan);
 }
+
+
+#[derive(Debug, TlvEncode, TlvDecode)]
+pub struct AtsssContainer(Vec<u8>);
 
 
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]

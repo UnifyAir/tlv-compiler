@@ -409,8 +409,8 @@ fn impl_tlv_decode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
 fn impl_newtype_decode(struct_name: Ident) -> Result<TokenStream, Error> {
     Ok(quote! {
         impl TlvDecode for #struct_name {
-            fn decode(mut bytes: Bytes, _length: usize) -> Result<Self, tlv::prelude::TlvError> {
-                let inner = <_>::decode(bytes, _length)?;
+            fn decode(mut __bytes: Bytes, length: usize) -> Result<Self, tlv::prelude::TlvError> {
+                let inner = <_>::decode(__bytes, length)?;
                 Ok(#struct_name(inner))
             }
         }

@@ -99,7 +99,7 @@ fn format_tv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, 
         // Its a 4bit tag 4bit valie case
         let _tag = tlv_config.tag.expect("TAG is required to type Tv") as u8;
         return Ok(quote! {
-            let #field_name = __bytes.get_u8() & 0b00001111;
+            let #field_name = __bytes.get_u8() >> 4;
         });
     } else {
         // Its a 1 or more byte tag and 1 or mote byte value case
@@ -158,7 +158,7 @@ fn format_4bit_v_decode(
         }
     };
     let value_stream_1: TokenStream = quote! {
-        let #field_name_1: #field_type_1 = <#field_type_1>::from(__chunk >> 4);
+        let #field_name_1: #field_type_1 = <#field_type_1>::from(__chunk & 0b00001111);
     };
 
     let field_name_2 = field_2.ident.unwrap();
@@ -169,7 +169,7 @@ fn format_4bit_v_decode(
         }
     };
     let value_stream_2: TokenStream = quote! {
-        let #field_name_2: #field_type_2 = <#field_type_2>::from(__chunk & 0b00001111);
+        let #field_name_2: #field_type_2 = <#field_type_2>::from(__chunk >> 4);
     };
 
     return Ok(quote! {
@@ -218,7 +218,7 @@ fn format_option_decode(
                 // Its a 4bit tag 4bit valie case
                 let _tag = tlv_config.tag.expect("TAG is required to type Tv") as u8;
                 return Ok(quote! {
-                    #field_name = Some(<#generic>::from(__bytes.get_u8() & 0b00001111));
+                    #field_name = Some(<#generic>::from(__bytes.get_u8() >> 4));
                 });
             } else {
                 // Its a 1 or more byte tag and 1 or mote byte value case
@@ -270,7 +270,7 @@ fn init_option_decoder(
 
     let tag_4_bit_extension_stream: TokenStream = if tag_4_bit_output_stream.len() != 0 {
         quote! {
-            let __4bitTag: u8 = __tag >> 4;
+            let __4bitTag: u8 = __tag & 0b00001111;
 
             if (__tag >= 0x80) {
                 // Tag is 4bit

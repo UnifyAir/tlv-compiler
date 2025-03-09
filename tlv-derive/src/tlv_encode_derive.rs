@@ -126,11 +126,11 @@ fn format_tv_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<TokenStr
         // Its a 4bit tag 4bit value case
         let tag = tlv_config.tag.expect("TAG is required to type TV") as u8;
         let tag_stream = quote! {
-            let __tag: u8 = #tag << 4;
+            let __tag: u8 = #tag;
         };
 
         let value_stream: TokenStream = quote! {
-            let __value: u8 = self.#field_name.to_be();
+            let __value: u8 = self.#field_name.to_be() << 4;
         };
         return Ok(quote! {
             #tag_stream
@@ -179,10 +179,10 @@ fn format_4bit_v_encode(
 ) -> Result<TokenStream, Error> {
     // Its a 4bit & 4bit value case
     let value_stream_1: TokenStream = quote! {
-        let __value_1: u8 = u8::from(self.#field_name_1.clone()).to_be()<<4;
+        let __value_1: u8 = u8::from(self.#field_name_1.clone()).to_be();
     };
     let value_stream_2: TokenStream = quote! {
-        let __value_2: u8 = u8::from(self.#field_name_2.clone()).to_be();
+        let __value_2: u8 = u8::from(self.#field_name_2.clone()).to_be()<<4;
     };
     return Ok(quote! {
         #value_stream_1

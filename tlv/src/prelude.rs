@@ -24,7 +24,7 @@ pub trait TlvEncode {
 // }
 
 pub trait TlvDecode: Sized {
-    fn decode(bytes: &mut Bytes, length: usize) -> Result<Self, TlvError>;
+    fn decode(length: usize, bytes: &mut Bytes) -> Result<Self, TlvError>;
 }
 
 // pub trait TlvDecodeInner: Sized {
@@ -66,13 +66,13 @@ impl TlvEncode for Vec<u8> {
 // }
 
 impl TlvDecode for u8 {
-    fn decode(bytes: &mut Bytes, _length: usize) -> Result<Self, TlvError> {
+    fn decode(_lenght: usize, bytes: &mut Bytes) -> Result<Self, TlvError> {
         Ok(bytes.get_u8())
     }
 }
 
 impl TlvDecode for Vec<u8> {
-	fn decode(bytes: &mut Bytes, length: usize) -> Result<Self, TlvError> {
+	fn decode(length: usize, bytes: &mut Bytes) -> Result<Self, TlvError> {
 		let mut output = vec![0; length];
 		bytes.copy_to_slice(&mut output);
 		Ok(output)

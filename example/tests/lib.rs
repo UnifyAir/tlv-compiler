@@ -91,7 +91,7 @@ fn test_tlv_e() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = tlv_e.encode(&mut bytes).unwrap();
 
-    let decoded = TlvEStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = TlvEStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(tlv_e, decoded);
 }
 
@@ -101,7 +101,7 @@ fn test_lv() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = lv.encode(&mut bytes).unwrap();
 
-    let decoded = LvStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = LvStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(lv, decoded);
 }
 
@@ -111,7 +111,7 @@ fn test_lv_e() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = lv_e.encode(&mut bytes).unwrap();
 
-    let decoded = LvEStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = LvEStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(lv_e, decoded);
 }
 
@@ -121,7 +121,7 @@ fn test_tv() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = tv.encode(&mut bytes).unwrap();
 
-    let decoded = TvStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = TvStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(tv, decoded);
 }
 
@@ -131,7 +131,7 @@ fn test_tv_4bit() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = tv_4bit.encode(&mut bytes).unwrap();
 
-    let decoded = Tv4BitStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = Tv4BitStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(tv_4bit, decoded);
 }
 
@@ -144,7 +144,7 @@ fn test_4bit_pair() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = pair.encode(&mut bytes).unwrap();
 
-    let decoded = FourBitPairStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = FourBitPairStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(pair, decoded);
 }
 
@@ -161,7 +161,7 @@ fn test_complex_mixed() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = complex.encode(&mut bytes).unwrap();
 
-    let decoded = ComplexMixedStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = ComplexMixedStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(complex, decoded);
 }
 
@@ -176,7 +176,7 @@ fn test_optional_mixed() {
     };
     let mut bytes = BytesMut::with_capacity(32);
     let len = optional_all.encode(&mut bytes).unwrap();
-    let decoded = OptionalMixedStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = OptionalMixedStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(optional_all, decoded);
 
     // Test with some fields None
@@ -188,7 +188,7 @@ fn test_optional_mixed() {
     };
     let mut bytes = BytesMut::with_capacity(32);
     let len = optional_some.encode(&mut bytes).unwrap();
-    let decoded = OptionalMixedStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = OptionalMixedStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(optional_some, decoded);
 
     // Test with all optional fields None
@@ -200,7 +200,7 @@ fn test_optional_mixed() {
     };
     let mut bytes = BytesMut::with_capacity(32);
     let len = optional_none.encode(&mut bytes).unwrap();
-    let decoded = OptionalMixedStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = OptionalMixedStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(optional_none, decoded);
 }
 
@@ -235,7 +235,7 @@ fn test_vector_tlv() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = vector_tlv.encode(&mut bytes).unwrap();
 
-    let decoded = VectorTlvStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = VectorTlvStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(vector_tlv, decoded);
 
     // Test with empty vector
@@ -243,7 +243,7 @@ fn test_vector_tlv() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = empty_vector_tlv.encode(&mut bytes).unwrap();
 
-    let decoded = VectorTlvStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = VectorTlvStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(empty_vector_tlv, decoded);
 }
 
@@ -255,7 +255,7 @@ fn test_vector_lv() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = vector_lv.encode(&mut bytes).unwrap();
 
-    let decoded = VectorLvStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = VectorLvStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(vector_lv, decoded);
 }
 
@@ -269,7 +269,7 @@ fn test_optional_vector() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = optional_present.encode(&mut bytes).unwrap();
 
-    let decoded = OptionalVectorStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = OptionalVectorStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(optional_present, decoded);
 
     // Test with optional vector absent
@@ -280,7 +280,7 @@ fn test_optional_vector() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = optional_absent.encode(&mut bytes).unwrap();
 
-    let decoded = OptionalVectorStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = OptionalVectorStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(optional_absent, decoded);
 
     // Test with empty vectors
@@ -291,7 +291,7 @@ fn test_optional_vector() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = empty_vectors.encode(&mut bytes).unwrap();
 
-    let decoded = OptionalVectorStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = OptionalVectorStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(empty_vectors, decoded);
 }
 
@@ -342,7 +342,7 @@ fn test_newtype_u8() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = newtype.encode(&mut bytes).unwrap();
 
-    let decoded = NewTypeU8::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = NewTypeU8::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(newtype, decoded);
 }
 
@@ -352,7 +352,7 @@ fn test_newtype_vec() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = newtype.encode(&mut bytes).unwrap();
 
-    let decoded = NewTypeVec::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = NewTypeVec::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(newtype, decoded);
 
     // Test with empty vector
@@ -360,7 +360,7 @@ fn test_newtype_vec() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = empty_newtype.encode(&mut bytes).unwrap();
 
-    let decoded = NewTypeVec::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = NewTypeVec::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(empty_newtype, decoded);
 }
 
@@ -373,7 +373,7 @@ fn test_contains_newtypes() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = contains_newtypes.encode(&mut bytes).unwrap();
 
-    let decoded = ContainsNewtypes::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = ContainsNewtypes::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(contains_newtypes, decoded);
 }
 
@@ -388,7 +388,7 @@ fn test_optional_newtypes() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = optional_all.encode(&mut bytes).unwrap();
 
-    let decoded = OptionalNewtypes::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = OptionalNewtypes::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(optional_all, decoded);
 
     // Test with some fields None
@@ -400,7 +400,7 @@ fn test_optional_newtypes() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = optional_some.encode(&mut bytes).unwrap();
 
-    let decoded = OptionalNewtypes::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = OptionalNewtypes::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(optional_some, decoded);
 
     // Test with all optional fields None
@@ -412,7 +412,7 @@ fn test_optional_newtypes() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = optional_none.encode(&mut bytes).unwrap();
 
-    let decoded = OptionalNewtypes::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = OptionalNewtypes::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(optional_none, decoded);
 }
 
@@ -428,7 +428,7 @@ fn test_mixed_newtype_struct() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = mixed_all.encode(&mut bytes).unwrap();
 
-    let decoded = MixedNewtypeStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = MixedNewtypeStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(mixed_all, decoded);
 
     // Test with some fields None
@@ -441,7 +441,7 @@ fn test_mixed_newtype_struct() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = mixed_some.encode(&mut bytes).unwrap();
 
-    let decoded = MixedNewtypeStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = MixedNewtypeStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(mixed_some, decoded);
 
     // Test with all optional fields None
@@ -454,6 +454,6 @@ fn test_mixed_newtype_struct() {
     let mut bytes = BytesMut::with_capacity(32);
     let len = mixed_none.encode(&mut bytes).unwrap();
 
-    let decoded = MixedNewtypeStruct::decode(&mut bytes.freeze(), len).unwrap();
+    let decoded = MixedNewtypeStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(mixed_none, decoded);
 }

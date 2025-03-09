@@ -66,7 +66,7 @@ fn format_tlv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream,
     Ok(quote! {
         #tag_stream
         #length_stream
-        let #field_name = <#field_type>::decode(&mut __bytes.split_to(__actual_length), __actual_length)?;
+        let #field_name = <#field_type>::decode(__actual_length, &mut __bytes.split_to(__actual_length))?;
     })
 }
 
@@ -82,7 +82,7 @@ fn format_lv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, 
 
     Ok(quote! {
         #length_stream
-        let #field_name = <#field_type>::decode(&mut __bytes.split_to(__actual_length), __actual_length)?;
+        let #field_name = <#field_type>::decode(__actual_length, &mut __bytes.split_to(__actual_length))?;
     })
 }
 
@@ -107,7 +107,7 @@ fn format_tv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, 
         let length = tlv_config.length.expect("LENGTH is required to type Tv") as usize;
         return Ok(quote! {
             #tag_stream
-            let #field_name = <#field_type>::decode(&mut __bytes.split_to(#length), #length)?;
+            let #field_name = <#field_type>::decode(#length, &mut __bytes.split_to(#length))?;
         });
     }
 }
@@ -125,7 +125,7 @@ fn format_t_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, E
     Ok(quote! {
         #tag_stream
         let __actual_length = 1usize;
-        let #field_name = <#field_type>::decode(&mut __bytes.split_to(__actual_length), __actual_length)?;
+        let #field_name = <#field_type>::decode(__actual_length, &mut __bytes.split_to(__actual_length))?;
     })
 }
 
@@ -140,7 +140,7 @@ fn format_v_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, E
 
     let length = tlv_config.length.expect("LENGTH is required to type Tv") as usize;
     Ok(quote! {
-        let #field_name = <#field_type>::decode(&mut __bytes.split_to(#length), #length)?;
+        let #field_name = <#field_type>::decode(#length, &mut __bytes.split_to(#length))?;
     })
 }
 
@@ -202,7 +202,7 @@ fn format_option_decode(
             return Ok(quote! {
                 #tag_stream
                 #length_stream
-                #field_name = Some(<#generic>::decode(&mut __bytes.split_to(__actual_length), __actual_length)?);
+                #field_name = Some(<#generic>::decode(__actual_length, &mut __bytes.split_to(__actual_length))?);
             });
         }
         "TV" => {
@@ -226,7 +226,7 @@ fn format_option_decode(
                 let length = tlv_config.length.expect("LENGTH is required to type Tv") as usize;
                 return Ok(quote! {
                     #tag_stream
-                    #field_name = Some(<#generic>::decode(&mut __bytes.split_to(#length), #length)?);
+                    #field_name = Some(<#generic>::decode(#length, &mut __bytes.split_to(#length))?);
                 });
             }
         }
@@ -432,7 +432,7 @@ fn impl_tlv_decode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
 
     Ok(quote! {
         impl TlvDecode for #struct_name {
-            fn decode(__bytes: &mut Bytes, length: usize) -> Result<Self, tlv::prelude::TlvError> {
+            fn decode(length: usize, __bytes: &mut Bytes) -> Result<Self, tlv::prelude::TlvError> {
                 #(#output_stream)*
                 Ok(#struct_name{
                     #(#field_names),*
@@ -445,8 +445,8 @@ fn impl_tlv_decode(struct_name: Ident, data_struct: DataStruct) -> Result<TokenS
 fn impl_newtype_decode(struct_name: Ident) -> Result<TokenStream, Error> {
     Ok(quote! {
         impl TlvDecode for #struct_name {
-            fn decode(__bytes: &mut Bytes, length: usize) -> Result<Self, tlv::prelude::TlvError> {
-                let inner = <_>::decode(__bytes, length)?;
+            fn decode(length: usize, __bytes: &mut Bytes) -> Result<Self, tlv::prelude::TlvError> {
+                let inner = <_>::decode(length, __bytes)?;
                 Ok(#struct_name(inner))
             }
         }

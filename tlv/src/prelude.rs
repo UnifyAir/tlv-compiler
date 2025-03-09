@@ -10,6 +10,8 @@ pub enum TlvError {
     Unknown,
     #[error("Incomplete byte exist probabily because last insertion was u4 without any spare or remaining u4")]
     InCompleteByteInsertion,
+    #[error("Payload is not as per specification")]
+    MarformedPayload,
 }
 
 pub trait TlvEncode {

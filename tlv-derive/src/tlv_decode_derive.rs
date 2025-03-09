@@ -35,18 +35,54 @@ fn length_decode(tlv_config: &TlvConfig) -> TokenStream {
             let __actual_length: usize = 0usize;
         };
     }
+    
     match tlv_config.length {
         Some(length) => {
-            let length_bytes = tlv_config.length_bytes_format as usize;
+            let get_bytes = get_get_bytes(tlv_config.length_bytes_format);
+            
             quote! {
+                let __parsed_length = __bytes.#get_bytes() as usize;
+                if __parsed_length != #length {
+                    return Err(tlv::prelude::TlvError::MarformedPayload);
+                }
                 let __actual_length: usize = #length;
-                __bytes.advance(#length_bytes);
             }
         }
         None => {
             let get_bytes = get_get_bytes(tlv_config.length_bytes_format);
+            
+            let length_validation_stream = if tlv_config.min_length.is_some() || tlv_config.max_length.is_some() {
+                let min_check = if let Some(min) = tlv_config.min_length {
+                    quote! {
+                        if __actual_length < #min {
+                            return Err(tlv::prelude::TlvError::MarformedPayload);
+                        }
+                    }
+                } else {
+                    quote! {}
+                };
+                
+                let max_check = if let Some(max) = tlv_config.max_length {
+                    quote! {
+                        if __actual_length > #max {
+                            return Err(tlv::prelude::TlvError::MarformedPayload);
+                        }
+                    }
+                } else {
+                    quote! {}
+                };
+                
+                quote! {
+                    #min_check
+                    #max_check
+                }
+            } else {
+                quote! {}
+            };
+            
             quote! {
                 let __actual_length = __bytes.#get_bytes() as usize;
+                #length_validation_stream
             }
         }
     }

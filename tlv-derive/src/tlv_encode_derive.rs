@@ -227,7 +227,7 @@ fn format_option_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<Toke
                 };
 
                 let value_stream: TokenStream = quote! {
-                    let __value: u8 = __inner.to_be();
+                    let __value: u8 = u8::from(__inner.clone()).to_be();
                 };
                 return Ok(quote! {
                     match &self.#field_name {

@@ -29,6 +29,35 @@ fn tag_decode(tlv_config: &TlvConfig) -> TokenStream {
     }
 }
 
+
+// Todo: decide whether to put the check for lenth constraints or not,
+// will it have any performance impact.
+
+// fn length_decode(tlv_config: &TlvConfig) -> TokenStream {
+//     if tlv_config.length_bytes_format == 0 {
+//         return quote! {
+//             let __actual_length: usize = 0usize;
+//         };
+//     }
+//     match tlv_config.length {
+//         Some(length) => {
+//             let length_bytes = tlv_config.length_bytes_format as usize;
+//             quote! {
+//                 let __actual_length: usize = #length;
+//                 __bytes.advance(#length_bytes);
+//             }
+//         }
+//         None => {
+//             let get_bytes = get_get_bytes(tlv_config.length_bytes_format);
+//             quote! {
+//                 let __actual_length = __bytes.#get_bytes() as usize;
+//             }
+//         }
+//     }
+// }
+
+
+
 fn length_decode(tlv_config: &TlvConfig) -> TokenStream {
     if tlv_config.length_bytes_format == 0 {
         return quote! {
@@ -135,7 +164,7 @@ fn format_tv_decode(field: Field, tlv_config: TlvConfig) -> Result<TokenStream, 
         // Its a 4bit tag 4bit valie case
         let _tag = tlv_config.tag.expect("TAG is required to type Tv") as u8;
         return Ok(quote! {
-            let #field_name = __bytes.get_u8() >> 4;
+            let #field_name = __bytes.get_u8() & 0b00001111;
         });
     } else {
         // Its a 1 or more byte tag and 1 or mote byte value case
@@ -254,7 +283,7 @@ fn format_option_decode(
                 // Its a 4bit tag 4bit valie case
                 let _tag = tlv_config.tag.expect("TAG is required to type Tv") as u8;
                 return Ok(quote! {
-                    #field_name = Some(<#generic>::from(__bytes.get_u8() >> 4));
+                    #field_name = Some(<#generic>::from(__bytes.get_u8() & 0b00001111));
                 });
             } else {
                 // Its a 1 or more byte tag and 1 or mote byte value case
@@ -306,7 +335,7 @@ fn init_option_decoder(
 
     let tag_4_bit_extension_stream: TokenStream = if tag_4_bit_output_stream.len() != 0 {
         quote! {
-            let __4bitTag: u8 = __tag & 0b00001111;
+            let __4bitTag: u8 = __tag >> 4;
 
             if (__tag >= 0x80) {
                 // Tag is 4bit
@@ -325,14 +354,6 @@ fn init_option_decoder(
     };
 
     Ok(quote! {
-        /************************************************************************
-         * This Section is super error prone
-         * Nested match should be more efficient keeping the 4 bit version outside
-         * Because TV of 1 bytes could match with full 1 byte tag in worst case
-         * scenerio, if 4bit kept outside this would not be the case.
-         * 4 bit version should only match with 4 bit tlv_config.tag, currently
-         * all tags are matched with 4 bit tag.
-         **************************************************************************/
 
         while __bytes.remaining() != 0 {
             let __tag: u8 = *__bytes.chunk().first().ok_or(TlvError::Unknown)?;

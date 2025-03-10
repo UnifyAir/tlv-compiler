@@ -126,11 +126,11 @@ fn format_tv_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<TokenStr
         // Its a 4bit tag 4bit value case
         let tag = tlv_config.tag.expect("TAG is required to type TV") as u8;
         let tag_stream = quote! {
-            let __tag: u8 = #tag;
+            let __tag: u8 = #tag << 4;
         };
 
         let value_stream: TokenStream = quote! {
-            let __value: u8 = self.#field_name.to_be() << 4;
+            let __value: u8 = self.#field_name.to_be();
         };
         return Ok(quote! {
             #tag_stream
@@ -219,17 +219,42 @@ fn format_option_encode(field_name: Ident, tlv_config: TlvConfig) -> Result<Toke
             });
         }
         "TV" => {
-            return Ok(quote! {
-                match &self.#field_name {
-                    Some(__inner) => {
-                        #tag_stream
-                        __total_length += #header_size_bytes as usize;
-                        let __actual_length = __inner.encode(__bytes)?;
-                        __total_length += __actual_length as usize;
+            if tlv_config.tag_bytes_format == 0 {
+                // Its a 4bit tag 4bit valie case
+                let tag = tlv_config.tag.expect("TAG is required to type TV") as u8;
+                let tag_stream = quote! {
+                    let __tag: u8 = #tag << 4;
+                };
+
+                let value_stream: TokenStream = quote! {
+                    let __value: u8 = __inner.to_be();
+                };
+                return Ok(quote! {
+                    match &self.#field_name {
+                        Some(__inner) => {
+                            #tag_stream
+                            #value_stream
+                            __bytes.put_u8(__tag | __value);
+                            let __actual_length = 1usize;
+                            __total_length += __actual_length as usize;
+                        }
+                        None => {}
                     }
-                    None => {}
-                }
-            });
+                });
+            } else {
+                // Its a 1 or more byte tag and 1 or mote byte value case
+                return Ok(quote! {
+                    match &self.#field_name {
+                        Some(__inner) => {
+                            #tag_stream
+                            __total_length += #header_size_bytes as usize;
+                            let __actual_length = __inner.encode(__bytes)?;
+                            __total_length += __actual_length as usize;
+                        }
+                        None => {}
+                    }
+                });
+            }
         }
         _ => {
             abort_call_site!("Option with TLV, TV, TLV-E are supported")
@@ -366,11 +391,9 @@ pub(crate) fn tlv_encode(token_stream: TokenStream) -> Result<TokenStream, Error
             } else {
                 impl_tlv_encode(struct_name, data_struct)
             }
-        },
+        }
         _ => {
             abort_call_site!("Currently only structs are supported");
         }
     }
 }
-
-

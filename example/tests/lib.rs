@@ -46,6 +46,13 @@ pub struct Tv4BitStruct {
     value: u8,
 }
 
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct OptionalTv4BitStruct {
+    #[tlv_config(tag = 0x9, tag_bytes_format = 0, format = "TV")]
+    value: Option<u8>,
+}
+
+
 // 4-bit value pair struct
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct FourBitPairStruct {
@@ -133,6 +140,23 @@ fn test_tv_4bit() {
 
     let decoded = Tv4BitStruct::decode(len, &mut bytes.freeze()).unwrap();
     assert_eq!(tv_4bit, decoded);
+}
+
+#[test]
+fn test_optional_tv_4bit() {
+    let optional_tv_4bit = OptionalTv4BitStruct { value: Some(7) }; // Testing with value < 16
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = optional_tv_4bit.encode(&mut bytes).unwrap();
+
+    let decoded = OptionalTv4BitStruct::decode(len, &mut bytes.freeze()).unwrap();
+    assert_eq!(optional_tv_4bit, decoded);
+
+    let optional_tv_4bit = OptionalTv4BitStruct { value: None }; // Testing with value < 16
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = optional_tv_4bit.encode(&mut bytes).unwrap();
+
+    let decoded = OptionalTv4BitStruct::decode(len, &mut bytes.freeze()).unwrap();
+    assert_eq!(optional_tv_4bit, decoded);
 }
 
 #[test]

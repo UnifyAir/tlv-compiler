@@ -1,7 +1,7 @@
 use tlv_derive::{TlvDecode, TlvEncode};
 use tlv::prelude::*;
 use tlv::{BytesMut, BufMut};
-use derive_more::{Into, From};
+// use derive_more::{Into, From};
 
 fn main() {
 
@@ -56,16 +56,32 @@ fn main() {
     // let reverse = VectorTlvStruct::decode(final_bytes.clone().into(), final_bytes.len());
     // println!("{:?}", reverse.unwrap().lohan);
 
+    let tv_4bit = Tv4BitStruct { value: None }; // Testing with value < 16
+    let mut bytes = BytesMut::with_capacity(32);
+    let len = tv_4bit.encode(&mut bytes).unwrap();
 
-    let optional_all = OptionalMixedStruct {
-      required: 42,
-      optional_tv: Some(43),
-      optional_tlv: Some(44),
-      optional_tlv_e: Some(10),
-  };
-  let mut bytes = Bytes::from_static(&[80, 1, 42, 90, 43, 30, 3, 44, 100, 0, 1, 10]);
-  println!("{:?}", bytes.as_ref());
-  let decoded = OptionalMixedStruct::decode(bytes.len(), &mut bytes).unwrap();
+    let bb = bytes.clone().freeze();
+    println!("{:?}", bb.as_ref());
+    let decoded = Tv4BitStruct::decode(len, &mut bytes.freeze()).unwrap();
+    println!("{:?}", decoded);
+
+    assert_eq!(tv_4bit, decoded);
+  //   let optional_all = OptionalMixedStruct {
+  //     required: 42,
+  //     optional_tv: Some(43),
+  //     optional_tlv: Some(44),
+  //     optional_tlv_e: Some(10),
+  // };
+  // let mut bytes = Bytes::from_static(&[80, 1, 42, 90, 43, 30, 3, 44, 100, 0, 1, 10]);
+  // println!("{:?}", bytes.as_ref());
+  // let decoded = OptionalMixedStruct::decode(bytes.len(), &mut bytes).unwrap();
+}
+
+// TV struct with 4-bit tag and value
+#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+pub struct Tv4BitStruct {
+    #[tlv_config(tag = 0x9, tag_bytes_format = 0, format = "TV")]
+    value: Option<u8>,
 }
 
 // #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
@@ -223,15 +239,15 @@ fn main() {
 
 // }
 
-#[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
-pub struct OptionalMixedStruct {
-    #[tlv_config(tag = 80, length_bytes_format = 1, format = "TLV")]
-    required: u8,
-    #[tlv_config(tag = 90, tag_bytes_format = 1, length = 1, format = "TV")]
-    optional_tv: Option<u8>,
-    #[tlv_config(tag = 30, length_bytes_format = 1, length = 1, format = "TLV")]
-    optional_tlv: Option<u8>,
-    #[tlv_config(tag = 100, length_bytes_format = 2, format = "TLV-E")]
-    optional_tlv_e: Option<u8>,
-}
+// #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
+// pub struct OptionalMixedStruct {
+//     #[tlv_config(tag = 80, length_bytes_format = 1, format = "TLV")]
+//     required: u8,
+//     #[tlv_config(tag = 90, tag_bytes_format = 1, length = 1, format = "TV")]
+//     optional_tv: Option<u8>,
+//     #[tlv_config(tag = 30, length_bytes_format = 1, length = 1, format = "TLV")]
+//     optional_tlv: Option<u8>,
+//     #[tlv_config(tag = 100, length_bytes_format = 2, format = "TLV-E")]
+//     optional_tlv_e: Option<u8>,
+// }
 

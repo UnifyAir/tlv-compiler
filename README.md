@@ -2,7 +2,7 @@
 
 ![README AI Generated](https://img.shields.io/badge/README-AI%20Generated-blue.svg)
 
-A Rust library for encoding and decoding Type-Length-Value (TLV) structures, specifically designed for 5G Non-Access Stratum (NAS) messages as described in 3GPP specifications TS 124 007 and TS 124 501.
+A Rust library for encoding and decoding Type-Length-Value (TLV) structures, specifically designed for 5G Non-Access Stratum (NAS) messages as described in 3GPP specifications TS 24 007 and TS 24 501.
 
 ## Overview
 
@@ -101,8 +101,8 @@ fn main() {
 
 This library is designed to work with 5G NAS messages as specified in:
 
-- **TS 124 007**: "Mobile radio interface signalling layer 3; General aspects"
-- **TS 124 501**: "Non-Access-Stratum (NAS) protocol for 5G System (5GS); Stage 3"
+- **TS 24 007**: "Mobile radio interface signalling layer 3; General aspects"
+- **TS 24 501**: "Non-Access-Stratum (NAS) protocol for 5G System (5GS); Stage 3"
 
 These specifications define the TLV structures used in 5G NAS messages for various procedures including registration, authentication, and service requests.
 

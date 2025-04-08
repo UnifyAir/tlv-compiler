@@ -1,10 +1,10 @@
 [package]
 name = "example"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-tlv-derive = { path = "../tlv-derive" }
 tlv = { path = "../tlv"}
+# tlv = { git = "https://github.com/UnifyAir/tlv-compiler.git", package = "tlv", branch = "master" }
 
-derive_more = { version = "2", features = ["from", "into"] }
+

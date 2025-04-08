@@ -3,12 +3,6 @@
 version = 4
 
 [[package]]
-name = "anyhow"
-version = "1.0.94"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1fd03a028ef38ba2276dce7e33fcd6369c158a1bca17946c4b1b701891c1ff7"
-
-[[package]]
 name = "attribute-derive"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -62,32 +56,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "derive_more"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "093242cf7570c207c83073cf82f79706fe7b8317e98620a47d5be7c3d8497678"
-dependencies = [
- "derive_more-impl",
-]
-
-[[package]]
-name = "derive_more-impl"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bda628edc44c4bb645fbe0f758797143e4e07926f7ebf4e9bdfbd3d2ce621df3"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.90",
-]
-
-[[package]]
 name = "example"
 version = "0.1.0"
 dependencies = [
- "derive_more",
  "tlv",
- "tlv-derive",
 ]
 
 [[package]]
@@ -255,7 +227,6 @@ dependencies = [
 name = "tlv"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "attribute-derive",
  "bytes",
  "thiserror",
@@ -266,7 +237,6 @@ dependencies = [
 name = "tlv-derive"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "attribute-derive",
  "bytes",
  "prettyplease",

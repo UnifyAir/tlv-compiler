@@ -2,8 +2,7 @@ extern crate tlv;
 
 use tlv::prelude::*;
 use tlv::{BufMut, BytesMut};
-use tlv_derive::{TlvDecode, TlvEncode};
-
+use tlv::tlv_derive::*;
 // Basic TLV struct
 #[derive(TlvEncode, TlvDecode, Debug, PartialEq)]
 pub struct BasicTlv {

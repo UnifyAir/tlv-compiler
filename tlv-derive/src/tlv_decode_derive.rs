@@ -72,7 +72,7 @@ fn length_decode(tlv_config: &TlvConfig) -> TokenStream {
             quote! {
                 let __parsed_length = __bytes.#get_bytes() as usize;
                 if __parsed_length != #length {
-                    return Err(tlv::prelude::TlvError::MarformedPayload);
+                    return Err(tlv::prelude::TlvError::MalformedPayload);
                 }
                 let __actual_length: usize = #length;
             }
@@ -84,7 +84,7 @@ fn length_decode(tlv_config: &TlvConfig) -> TokenStream {
                 let min_check = if let Some(min) = tlv_config.min_length {
                     quote! {
                         if __actual_length < #min {
-                            return Err(tlv::prelude::TlvError::MarformedPayload);
+                            return Err(tlv::prelude::TlvError::MalformedPayload);
                         }
                     }
                 } else {
@@ -94,7 +94,7 @@ fn length_decode(tlv_config: &TlvConfig) -> TokenStream {
                 let max_check = if let Some(max) = tlv_config.max_length {
                     quote! {
                         if __actual_length > #max {
-                            return Err(tlv::prelude::TlvError::MarformedPayload);
+                            return Err(tlv::prelude::TlvError::MalformedPayload);
                         }
                     }
                 } else {

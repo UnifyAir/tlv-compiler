@@ -6,10 +6,10 @@ members = [ "example", "tlv",
 
 [workspace.dependencies]
 thiserror = "2.0.11"
-syn = "2.0"
+syn = { version = "2.0", features = ["full", "extra-traits"] }
 prettyplease = "0.2"
 quote = "1.0"
 proc-macro2 = "1.0"
 proc-macro-error = "1.0.4"
 bytes = "1.9.0"
-anyhow = "1.0.94"
+attribute-derive = { version = "0.10.3", features = ["syn-full"] }

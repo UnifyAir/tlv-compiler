@@ -1,16 +1,15 @@
 [package]
 name = "tlv-derive"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 prettyplease.workspace = true
 quote.workspace = true
-attribute-derive = { version = "0.10.3", features = ["syn-full"] }
-syn = { workspace = true, features = ["full", "extra-traits"] }
+attribute-derive.workspace = true
+syn.workspace = true
 bytes.workspace = true
 proc-macro2.workspace = true
-anyhow.workspace = true
 proc-macro-error.workspace = true
 
 [lib]
